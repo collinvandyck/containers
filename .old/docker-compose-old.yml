@@ -1,0 +1,127 @@
+volumes:
+  prometheus-data:
+  grafana-data:
+  portainer-data:
+  influxdb-data:
+
+services:
+
+  ubuntu-cli:
+    container_name: ubuntu-cli
+    image: ubuntu-cli
+    command: ["-c", "sleep infinity"]
+
+  influxdb:
+    container_name: influxdb
+    hostname: influxdb
+    image: influxdb:2.6
+    restart: unless-stopped
+    command:
+      - "--session-length=52560"
+    volumes:
+      - 'influxdb-data:/var/lib/influxdb2'
+    ports:
+      - 8086:8086
+
+  portainer:
+    container_name: portainer
+    hostname: portainer
+    image: portainer/portainer-ce:latest
+    restart: unless-stopped
+    volumes:
+      - 'portainer-data:/data'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    ports:
+      - 8000:8000
+      - 9443:9443
+
+  prometheus:
+    container_name: prometheus
+    hostname: prometheus
+    image: prom/prometheus
+    restart: unless-stopped
+    volumes:
+      - '/volume1/docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+      - '/volume1/docker/prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml'
+      - 'prometheus-data:/prometheus'
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - "--storage.tsdb.retention.time=30d"
+      - "--storage.tsdb.path=/prometheus/"
+    ports:
+      - 9090:9090
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # enables host.docker.internal as a dns name
+
+  grafana:
+    container_name: grafana
+    hostname: grafana
+    image: grafana/grafana-oss
+    restart: unless-stopped
+    volumes:
+      - 'grafana-data:/var/lib/grafana'
+    ports:
+      - 3000:3000
+
+  ngrok:
+    container_name: ngrok
+    image: ngrok/ngrok:latest
+    restart: unless-stopped
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yaml"
+    volumes:
+      - '/volume1/docker/ngrok/config.yaml:/etc/ngrok.yaml'
+    ports:
+      - 4041:4040
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    expose:
+      - 9100
+
+  pihole-exporter:
+    image: pihole-exporter:latest
+    hostname: pihole-exporter
+    container_name: pihole-exporter
+    restart: unless-stopped
+    environment:
+      PIHOLE_HOSTNAME: pihole
+      PIHOLE_PORT: 8080
+      PIHOLE_PASSWORD: ${PIHOLE_WEBPASSWORD}
+      PORT: 9617
+    ports:
+      - 9617:9617
+
+  pihole:
+    container_name: pihole
+    hostname: pihole
+    image: pihole/pihole:latest
+    restart: unless-stopped
+    environment:
+      TZ: 'America/Chicago'
+      FTLCONF_LOCAL_IPV4: 192.168.0.150
+      ServerIP: 192.168.0.150
+      WEB_PORT: 8080
+      QUERY_LOGGING: "false"
+    volumes:
+      - '/volume1/docker/pihole/pihole:/etc/pihole'
+      - '/volume1/docker/pihole/dnsmasq.d:/etc/dnsmasq.d'
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8080:8080"
+

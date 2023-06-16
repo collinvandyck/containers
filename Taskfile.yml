@@ -1,0 +1,25 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  default:
+    cmds:
+      - docker exec -it --detach-keys "ctrl-z,z" ubuntu-cli zsh
+  stop:
+    cmds:
+      - docker-compose stop
+  start:
+    cmds:
+      - docker-compose start
+
+  nasubuntu:
+    cmds:
+      - nas docker exec -it --detach-keys "ctrl-z,z" ubuntu-cli zsh
+  nas:
+    cmds:
+      - nas dc up -d
+    silent: false

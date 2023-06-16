@@ -1,0 +1,278 @@
+volumes:
+  freshrss_data:
+  freshrss_extensions:
+  grafana:
+  linkding:
+  pihole-etc-dnsmasq:
+  pihole-etc-pihole:
+  portainer:
+  prometheus:
+  registry:
+  livegrep:
+  atuin_postgres:
+  atuin-config:
+  caddy-data:
+  caddy-config:
+  homeassistant-config:
+
+secrets:
+  host_ssh_key:
+    file: /var/services/homes/collin/.ssh/id_rsa
+
+services:
+
+  registry:
+    restart: unless-stopped
+    container_name: registry
+    build:
+      context: registry
+    ports:
+      - 7000:5000
+    volumes:
+      - registry:/var/lib/registry
+
+  ubuntu-cli:
+    container_name: ubuntu-cli
+    restart: unless-stopped
+    build:
+      context: ubuntu
+    secrets:
+      - host_ssh_key
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # enables host.docker.internal as a dns name
+
+  portainer:
+    container_name: portainer
+    hostname: portainer
+    image: portainer/portainer-ce:latest
+    restart: unless-stopped
+    volumes:
+      - portainer:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 8000:8000
+      - 9443:9443
+    environment:
+      - VIRTUAL_HOST=portainer.collinvandyck.com
+      - VIRTUAL_PORT=9000
+
+  linkding:
+    container_name: linkding
+    restart: unless-stopped
+    image: sissbruecker/linkding:latest
+    volumes:
+    - linkding:/etc/linkding/data
+    ports:
+      - "9099:9090"
+
+  ngrok:
+    container_name: ngrok
+    build:
+      context: ngrok-nas
+    restart: unless-stopped
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yaml"
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_NAS_AUTHTOKEN}
+    ports:
+      - 4041:4040
+
+  pihole:
+    container_name: pihole
+    hostname: pihole
+    image: pihole/pihole:latest
+    restart: unless-stopped
+    environment:
+      TZ: 'America/Chicago'
+      FTLCONF_LOCAL_IPV4: 192.168.0.150
+      ServerIP: 192.168.0.150
+      WEB_PORT: 8080
+      QUERY_LOGGING: "false"
+      WEBPASSWORD: ${PIHOLE_WEBPASSWORD}
+    volumes:
+      - pihole-etc-pihole:/etc/pihole
+      - pihole-etc-dnsmasq:/etc/dnsmasq.d
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8080:8080"
+
+  prometheus:
+    container_name: prometheus
+    hostname: prometheus
+    build:
+      context: prometheus
+    restart: unless-stopped
+    volumes:
+      - prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - "--storage.tsdb.retention.time=730d"
+      - "--storage.tsdb.path=/prometheus/"
+    ports:
+      - 9090:9090
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # enables host.docker.internal as a dns name
+
+  grafana:
+    container_name: grafana
+    hostname: grafana
+    image: grafana/grafana-oss
+    restart: unless-stopped
+    volumes:
+      - grafana:/var/lib/grafana
+    ports:
+      - 3000:3000
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    expose:
+      - 9100
+
+  openweather-exporter:
+    image: billykwooten/openweather-exporter
+    container_name: openweather-exporter
+    restart: unless-stopped
+    environment:
+      - OW_CITY=Durham, NC
+      - OW_APIKEY=${OPENWEATHER_API_KEY}
+      - OW_ENABLE_POL=false
+      - OW_ENABLE_UV=false
+
+  freshrss:
+    image: freshrss/freshrss:latest
+    container_name: freshrss
+    hostname: freshrss
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: 10m
+    volumes:
+      - freshrss_data:/var/www/FreshRSS/data
+      - freshrss_extensions:/var/www/FreshRSS/extensions
+    environment:
+      TZ: America/New_York
+      CRON_MIN: '3,33'
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # docker run -v $(pwd):/data ghcr.io/livegrep/livegrep/indexer /livegrep/bin/livegrep-github-reindex -repo livegrep/livegrep -http -dir /data
+  livegrep-indexer:
+    image: ghcr.io/livegrep/livegrep/indexer
+    container_name: livegrep-indexer
+    volumes:
+      - livegrep:/data
+    command:
+      - /livegrep/bin/livegrep-github-reindex
+      - -user
+      - collinvandyck
+      - -user
+      - BurntSushi
+      - -http
+      - -dir
+      - /data
+
+  # docker run -d --rm -v $(pwd):/data --network livegrep --name livegrep-backend ghcr.io/livegrep/livegrep/base /livegrep/bin/codesearch -load_index /data/livegrep.idx -grpc 0.0.0.0:9999
+  livegrep-backend:
+    image: ghcr.io/livegrep/livegrep/base
+    container_name: livegrep-backend
+    restart: unless-stopped
+    volumes:
+      - livegrep:/data
+    command:
+      - /livegrep/bin/codesearch
+      - -load_index
+      - /data/livegrep.idx
+      - -grpc
+      - 0.0.0.0:9999
+
+  # docker run -d --rm --network livegrep --publish 8910:8910 ghcr.io/livegrep/livegrep/base /livegrep/bin/livegrep -docroot /livegrep/web -listen=0.0.0.0:8910 --connect livegrep-backend:9999
+  livegrep-frontend:
+    image: ghcr.io/livegrep/livegrep/base
+    container_name: livegrep-frontend
+    restart: unless-stopped
+    command:
+      - /livegrep/bin/livegrep
+      - -docroot
+      - /livegrep/web
+      - -listen=0.0.0.0:8910
+      - -connect
+      - livegrep-backend:9999
+    ports:
+      - 8910:8910
+
+  atuin:
+    restart: always
+    container_name: atuin
+    image: ghcr.io/atuinsh/atuin:18.0.0
+    command: server start
+    volumes:
+      - "atuin-config:/config"
+    links:
+      - atuin-db:db
+    ports:
+      - 8888:8888
+    environment:
+      ATUIN_HOST: "0.0.0.0"
+      ATUIN_OPEN_REGISTRATION: "false"
+      ATUIN_DB_URI: postgres://atuin:${ATUIN_POSTGRES_PASSWORD}@db/atuin
+
+  atuin-db:
+    image: postgres:14
+    container_name: atuin-db
+    restart: unless-stopped
+    volumes: # Don't remove permanent storage for index database files!
+      - "atuin_postgres:/var/lib/postgresql/data/"
+    environment:
+      POSTGRES_USER: atuin
+      POSTGRES_PASSWORD: ${ATUIN_POSTGRES_PASSWORD}
+      POSTGRES_DB: atuin
+
+  caddy:
+    build:
+      context: caddy-nas
+    container_name: caddy
+    ports:
+      - 2080:80
+      - 2024:2024
+      - 2025:2025
+      - 2043:443
+      - 2043:443/udp
+    restart: unless-stopped
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+
+  homeassistant:
+    build:
+      context: homeassistant-nas
+    container_name: homeassistant
+    network_mode: host
+    privileged: true
+    restart: unless-stopped
+    environment:
+      TZ: America/New_York
+    volumes:
+      - homeassistant-config:/config
+      - /run/dbus:/run/dbus:ro
+
+
