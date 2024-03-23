@@ -1,0 +1,7 @@
+---
+targets:
+- hosts:
+  - 192.168.0.1
+  - nytimes.com
+  - rss.collinvandyck.com
+  interval: 10s

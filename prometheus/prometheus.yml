@@ -19,4 +19,7 @@ scrape_configs:
     static_configs:
       - targets:
           - "openweather-exporter:9091"
-
+  - job_name: "smokeping"
+    static_configs:
+      - targets:
+          - "smokeping-exporter:9374"
