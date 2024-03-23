@@ -186,51 +186,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  # docker run -v $(pwd):/data ghcr.io/livegrep/livegrep/indexer /livegrep/bin/livegrep-github-reindex -repo livegrep/livegrep -http -dir /data
-  livegrep-indexer:
-    image: ghcr.io/livegrep/livegrep/indexer
-    container_name: livegrep-indexer
-    volumes:
-      - livegrep:/data
-    command:
-      - /livegrep/bin/livegrep-github-reindex
-      - -user
-      - collinvandyck
-      - -user
-      - BurntSushi
-      - -http
-      - -dir
-      - /data
-
-  # docker run -d --rm -v $(pwd):/data --network livegrep --name livegrep-backend ghcr.io/livegrep/livegrep/base /livegrep/bin/codesearch -load_index /data/livegrep.idx -grpc 0.0.0.0:9999
-  livegrep-backend:
-    image: ghcr.io/livegrep/livegrep/base
-    container_name: livegrep-backend
-    restart: unless-stopped
-    volumes:
-      - livegrep:/data
-    command:
-      - /livegrep/bin/codesearch
-      - -load_index
-      - /data/livegrep.idx
-      - -grpc
-      - 0.0.0.0:9999
-
-  # docker run -d --rm --network livegrep --publish 8910:8910 ghcr.io/livegrep/livegrep/base /livegrep/bin/livegrep -docroot /livegrep/web -listen=0.0.0.0:8910 --connect livegrep-backend:9999
-  livegrep-frontend:
-    image: ghcr.io/livegrep/livegrep/base
-    container_name: livegrep-frontend
-    restart: unless-stopped
-    command:
-      - /livegrep/bin/livegrep
-      - -docroot
-      - /livegrep/web
-      - -listen=0.0.0.0:8910
-      - -connect
-      - livegrep-backend:9999
-    ports:
-      - 8910:8910
-
   atuin:
     restart: always
     container_name: atuin
