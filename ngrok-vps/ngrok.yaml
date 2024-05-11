@@ -1,0 +1,7 @@
+version: 2
+tunnels:
+  atuin:
+    labels:
+      - "edge=edghts_2gKHwWGDQx3B0WQdZO3rbPGOpB3"
+    addr: "atuin:8888"
+

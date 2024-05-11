@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 COMPOSE_FILE=${COMPOSE_FILE:=docker-compose-vps.yml}
-ADDR=${ADDR:='157.245.2.35'}
+ADDR=${ADDR:='5xx.engineer'}
 export COMPOSE_FILE
 export DOCKER_HOST="ssh://root@${ADDR}:22"
 
