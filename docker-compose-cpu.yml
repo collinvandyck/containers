@@ -1,0 +1,33 @@
+volumes:
+  atuin_postgres:
+  atuin-config:
+
+services:
+
+  atuin:
+    restart: always
+    container_name: atuin
+    image: ghcr.io/atuinsh/atuin:18.1.0
+    command: server start
+    volumes:
+      - "atuin-config:/config"
+    links:
+      - atuin-db:db
+    ports:
+      - 8888:8888
+    environment:
+      ATUIN_HOST: "0.0.0.0"
+      ATUIN_OPEN_REGISTRATION: "false"
+      ATUIN_DB_URI: postgres://atuin:${ATUIN_POSTGRES_PASSWORD}@db/atuin
+
+  atuin-db:
+    image: postgres:14
+    container_name: atuin-db
+    restart: unless-stopped
+    volumes: # Don't remove permanent storage for index database files!
+      - "atuin_postgres:/var/lib/postgresql/data/"
+    environment:
+      POSTGRES_USER: atuin
+      POSTGRES_PASSWORD: ${ATUIN_POSTGRES_PASSWORD}
+      POSTGRES_DB: atuin
+
