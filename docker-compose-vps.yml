@@ -1,6 +1,8 @@
 volumes:
   atuin_postgres:
   atuin-config:
+  caddy-data:
+  caddy-config:
 
 services:
 
@@ -45,4 +47,22 @@ services:
       NGROK_AUTHTOKEN: ${NGROK_VPS_AUTHTOKEN}
     ports:
       - 4041:4040
+
+  caddy:
+    build:
+      context: caddy-vps
+    container_name: caddy
+    privileged: true
+    ports:
+      - 80:80
+      - 443:443
+      - 2080:80
+      - 2024:2024
+      - 2025:2025
+      - 2043:443
+      - 2043:443/udp
+    restart: unless-stopped
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
 

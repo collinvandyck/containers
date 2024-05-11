@@ -1,0 +1,10 @@
+5xx.engineer  {
+	encode zstd gzip
+	respond "Hello, world!!"
+}
+
+atuin.5xx.engineer {
+	encode zstd gzip
+	reverse_proxy atuin:8888
+}
+
