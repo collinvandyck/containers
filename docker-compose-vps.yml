@@ -56,11 +56,6 @@ services:
     ports:
       - 80:80
       - 443:443
-      - 2080:80
-      - 2024:2024
-      - 2025:2025
-      - 2043:443
-      - 2043:443/udp
     restart: unless-stopped
     volumes:
       - caddy-data:/data
