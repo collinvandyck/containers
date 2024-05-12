@@ -62,3 +62,9 @@ services:
       - caddy-config:/config
       - /run/tailscale.nginx-auth.sock:/run/tailscale.nginx-auth.sock
 
+  bash:
+    image: bash
+    container_name: bash
+    network_mode: host
+    command: ["bash", "-c", "sleep 365"]
+
