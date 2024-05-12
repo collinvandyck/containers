@@ -60,4 +60,5 @@ services:
     volumes:
       - caddy-data:/data
       - caddy-config:/config
+      - /run/tailscale.nginx-auth.sock:/run/tailscale.nginx-auth.sock
 

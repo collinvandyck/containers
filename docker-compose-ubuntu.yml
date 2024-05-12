@@ -1,0 +1,18 @@
+#volumes:
+secrets:
+  host_ssh_key:
+    file: ~/.ssh/id_rsa
+
+services:
+
+  ubuntu-cli:
+    container_name: ubuntu-cli
+    build:
+      context: ubuntu
+    environment:
+    - DISPLAY=${HOSTNAME}:0
+    volumes:
+    - /tmp/.X11-unix:/tmp/.X11-unix
+    secrets:
+      - host_ssh_key
+

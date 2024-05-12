@@ -1,41 +1,54 @@
-#volumes:
-secrets:
-  host_ssh_key:
-    file: ~/.ssh/id_rsa
+volumes:
+  atuin_postgres:
+  atuin-config:
+  caddy-data:
+  caddy-config:
 
 services:
 
-  # https://gist.github.com/cschiewek/246a244ba23da8b9f0e7b11a68bf3285
-  # Updated:
-  #   https://gist.github.com/paul-krohn/e45f96181b1cf5e536325d1bdee6c949
-  # 
-  # Requirements:
-  #
-  # install xquartz
-  # in prefs->security, allow incoming network conns
-  #
-  # Runbook (each time):
-  #
-  # start xquartz
-  # xhost + ${hostname}
-  # export HOSTNAME=`hostname`
-  #  ubuntu-x11:
-  #  build:
-  #    context: ubuntu-x11
-  #  environment:
-  #  - DISPLAY=${HOSTNAME}:0
-  #  volumes:
-  #  - /tmp/.X11-unix:/tmp/.X11-unix
-
-
-  ubuntu-cli:
-    container_name: ubuntu-cli
-    build:
-      context: ubuntu
-    environment:
-    - DISPLAY=${HOSTNAME}:0
+  atuin:
+    restart: always
+    container_name: atuin
+    image: ghcr.io/atuinsh/atuin:18.2.0
+    command: server start
     volumes:
-    - /tmp/.X11-unix:/tmp/.X11-unix
-    secrets:
-      - host_ssh_key
+      - "atuin-config:/config"
+    links:
+      - atuin-db:db
+    ports:
+      - 8888:8888
+    environment:
+      ATUIN_HOST: "0.0.0.0"
+      ATUIN_OPEN_REGISTRATION: "false"
+      ATUIN_DB_URI: postgres://atuin:${ATUIN_POSTGRES_PASSWORD}@db/atuin
 
+  atuin-db:
+    image: postgres:14
+    container_name: atuin-db
+    restart: unless-stopped
+    volumes: # Don't remove permanent storage for index database files!
+      - "atuin_postgres:/var/lib/postgresql/data/"
+    environment:
+      POSTGRES_USER: atuin
+      POSTGRES_PASSWORD: ${ATUIN_POSTGRES_PASSWORD}
+      POSTGRES_DB: atuin
+
+  caddy:
+    build:
+      context: caddy
+    container_name: caddy
+    privileged: true
+    ports:
+      - 80:80
+      - 443:443
+    restart: unless-stopped
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+      - /run/tailscale.nginx-auth.sock:/run/tailscale.nginx-auth.sock
+
+  tailscale:
+    build:
+      context: tailscale
+    container_name: tailscale
+    restart: unless-stopped
