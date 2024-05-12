@@ -62,6 +62,13 @@ services:
       - caddy-config:/config
       - /run/tailscale.nginx-auth.sock:/run/tailscale.nginx-auth.sock
 
+  nginx:
+    build:
+      context: nginx
+    container_name: nginx
+    ports:
+      - 8088:80
+
   bash:
     image: bash
     container_name: bash
