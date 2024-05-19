@@ -33,21 +33,6 @@ services:
       POSTGRES_PASSWORD: ${ATUIN_POSTGRES_PASSWORD}
       POSTGRES_DB: atuin
 
-  ngrok:
-    container_name: ngrok
-    build:
-      context: ngrok-vps
-    restart: unless-stopped
-    command:
-      - "start"
-      - "--all"
-      - "--config"
-      - "/etc/ngrok.yaml"
-    environment:
-      NGROK_AUTHTOKEN: ${NGROK_VPS_AUTHTOKEN}
-    ports:
-      - 4041:4040
-
   caddy:
     build:
       context: caddy-vps
