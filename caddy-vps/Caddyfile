@@ -12,6 +12,18 @@ atuin.5xx.engineer {
 	reverse_proxy atuin:8888
 }
 
+rss.5xx.engineer {
+	encode zstd gzip
+	reverse_proxy freshrss:80
+	log {
+		output file /var/log/access-rss.log {
+			roll_size 1gb
+			roll_keep 5
+			roll_keep_for 720h
+		}
+	}
+}
+
 auth.5xx.engineer {
 	handle / {
 		forward_auth unix//run/tailscale.nginx-auth.sock {

@@ -3,6 +3,7 @@ volumes:
   atuin-config:
   caddy-data:
   caddy-config:
+  caddy-logs:
   freshrss_data:
   freshrss_extensions:
 
@@ -47,6 +48,7 @@ services:
     volumes:
       - caddy-data:/data
       - caddy-config:/config
+      - caddy-logs:/var/log/caddy
       - /run/tailscale.nginx-auth.sock:/run/tailscale.nginx-auth.sock
 
   bash:
