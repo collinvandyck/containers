@@ -3,6 +3,8 @@ volumes:
   atuin-config:
   caddy-data:
   caddy-config:
+  freshrss_data:
+  freshrss_extensions:
 
 services:
 
@@ -52,4 +54,19 @@ services:
     container_name: bash
     network_mode: host
     command: ["bash", "-c", "sleep 365"]
+
+  freshrss:
+    image: freshrss/freshrss:latest
+    container_name: freshrss
+    hostname: freshrss
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: 10m
+    volumes:
+      - freshrss_data:/var/www/FreshRSS/data
+      - freshrss_extensions:/var/www/FreshRSS/extensions
+    environment:
+      TZ: America/New_York
+      CRON_MIN: '3,33'
 
