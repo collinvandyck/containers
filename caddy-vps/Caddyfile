@@ -1,9 +1,12 @@
-{
-	debug
-}
-
 5xx.engineer  {
 	encode zstd gzip
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 1gb
+			roll_keep 2
+			roll_keep_for 24h
+		}
+	}
 	respond "Hello, {remote_host}:{remote_port}"
 }
 
@@ -16,10 +19,10 @@ rss.5xx.engineer {
 	encode zstd gzip
 	reverse_proxy freshrss:80
 	log {
-		output file /var/log/access-rss.log {
+		output file /var/log/caddy/access-rss.log {
 			roll_size 1gb
-			roll_keep 5
-			roll_keep_for 720h
+			roll_keep 2
+			roll_keep_for 24h
 		}
 	}
 }
