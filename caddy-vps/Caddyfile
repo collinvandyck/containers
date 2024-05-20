@@ -27,3 +27,8 @@ rss.5xx.engineer {
 	}
 }
 
+home.5xx.engineer {
+	encode zstd gzip
+	reverse_proxy homepage:3000
+}
+

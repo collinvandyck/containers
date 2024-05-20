@@ -72,3 +72,13 @@ services:
       TZ: America/New_York
       CRON_MIN: '3,33'
 
+  # listens on 3000
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    build:
+      context: homepage-vps
+    volumes:
+      # - /path/to/config:/app/config # Make sure your local config directory exists
+      - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
+    restart: unless-stopped
