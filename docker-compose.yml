@@ -45,6 +45,12 @@ services:
     volumes:
       - caddy-data:/data
       - caddy-config:/config
+    labels:
+      - homepage.group=My First Group
+      - homepage.name=caddy
+      - homepage.icon=emby.png
+      - homepage.href=https://localhost/
+      - homepage.description=Caddy
 
   homepage:
     image: ghcr.io/gethomepage/homepage:latest

@@ -2,7 +2,7 @@ localhost {
 	respond "Hello, {remote_host}:{remote_port}"
 }
 
-mbpm2.local {
+mbpm2.local home.local {
 	encode zstd gzip
 	reverse_proxy homepage:3000
 }
