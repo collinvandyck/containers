@@ -1,7 +1,10 @@
-{
-	debug
+localhost {
+	respond "Hello, {remote_host}:{remote_port}"
 }
 
-localhost
+mbpm2.local {
+	encode zstd gzip
+	reverse_proxy homepage:3000
+}
 
-respond "hi"
+

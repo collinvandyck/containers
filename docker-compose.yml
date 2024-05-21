@@ -45,10 +45,13 @@ services:
     volumes:
       - caddy-data:/data
       - caddy-config:/config
-      - /run/tailscale.nginx-auth.sock:/run/tailscale.nginx-auth.sock
 
-  tailscale:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
     build:
-      context: tailscale
-    container_name: tailscale
+      context: homepage
+    volumes:
+      # - /path/to/config:/app/config # Make sure your local config directory exists
+      - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
     restart: unless-stopped
