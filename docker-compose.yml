@@ -21,6 +21,12 @@ services:
       ATUIN_HOST: "0.0.0.0"
       ATUIN_OPEN_REGISTRATION: "false"
       ATUIN_DB_URI: postgres://atuin:${ATUIN_POSTGRES_PASSWORD}@db/atuin
+    labels:
+      - homepage.group=My First Group
+      - homepage.name=atuin
+      - homepage.icon=emby.png
+      - homepage.href=https://atuin.sh/
+      - homepage.description=Atuin
 
   atuin-db:
     image: postgres:14
@@ -53,11 +59,11 @@ services:
       - homepage.description=Caddy
 
   homepage:
-    image: ghcr.io/gethomepage/homepage:latest
-    container_name: homepage
     build:
       context: homepage
+    container_name: homepage
     volumes:
-      # - /path/to/config:/app/config # Make sure your local config directory exists
-      - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
+      - /var/run/docker.sock:/var/run/docker.sock:ro 
     restart: unless-stopped
+    environment:
+      LOG_LEVEL: info
