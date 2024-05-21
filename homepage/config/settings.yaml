@@ -5,3 +5,6 @@
 providers:
   openweathermap: openweathermapapikey
   weatherapi: weatherapiapikey
+
+theme: dark
+color: slate

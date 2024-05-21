@@ -2,17 +2,16 @@
 # For configuration options and examples, please see:
 # https://gethomepage.dev/latest/configs/bookmarks
 
-- Developer:
+- Frequent:
+    - HackerNews:
+        - abbr: HN
+          icon: hackernews
+          href: https://news.ycombinator.com/
     - Github:
         - abbr: GH
           href: https://github.com/
-
-- Social:
-    - Reddit:
-        - abbr: RE
-          href: https://reddit.com/
-
-- Entertainment:
-    - YouTube:
+    - Youtube:
         - abbr: YT
+          icon: youtube
           href: https://youtube.com/
+
