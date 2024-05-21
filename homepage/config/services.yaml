@@ -2,17 +2,12 @@
 # For configuration options and examples, please see:
 # https://gethomepage.dev/latest/configs/services
 
-- My First Groupy:
-    - My First Service:
+- Containers:
+    - Caddy:
         href: http://localhost/
-        description: Homepage is awesome
+        description: Caddy
+        widget:
+          type: caddy
+          url: http://caddy:2019
 
-- My Second Group:
-    - My Second Service:
-        href: http://localhost/
-        description: Homepage is the best
 
-- My Third Group:
-    - My Third Service:
-        href: http://localhost/
-        description: Homepage is 😎
