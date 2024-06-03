@@ -6,6 +6,7 @@ volumes:
   caddy-logs:
   freshrss_data:
   freshrss_extensions:
+  portainer:
 
 services:
 
@@ -82,3 +83,19 @@ services:
       # - /path/to/config:/app/config # Make sure your local config directory exists
       - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
     restart: unless-stopped
+
+  portainer:
+    container_name: portainer
+    hostname: portainer
+    image: portainer/portainer-ce:latest
+    restart: unless-stopped
+    volumes:
+      - portainer:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    #ports:
+    #- 8000:8000
+    #- 9443:9443
+    environment:
+      - MAYBE_DELETE_ME_TEMP_VIRTUAL_HOST=portainer.collinvandyck.com
+      - MAYBE_DELETE_ME_VIRTUAL_PORT=9000
+
