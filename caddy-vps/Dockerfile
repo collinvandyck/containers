@@ -1,3 +1,3 @@
-FROM caddy:2.7.6
+FROM caddy:2.8.0
 COPY ./Caddyfile /etc/caddy/Caddyfile
 COPY html /srv
