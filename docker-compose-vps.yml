@@ -19,8 +19,6 @@ services:
       - "atuin-config:/config"
     links:
       - atuin-db:db
-    ports:
-      - 8888:8888
     environment:
       ATUIN_HOST: "0.0.0.0"
       ATUIN_OPEN_REGISTRATION: "false"
