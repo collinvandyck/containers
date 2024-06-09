@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 COMPOSE_FILE=${COMPOSE_FILE:=docker-compose-vps.yml}
 ADDR=${ADDR:='5xx.engineer'}
 export COMPOSE_FILE

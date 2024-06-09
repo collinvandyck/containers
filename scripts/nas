@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 COMPOSE_FILE=${COMPOSE_FILE:=docker-compose-nas.yml}
 NAS_ADDR=${NAS_ADDR:='192.168.0.150'}
 
