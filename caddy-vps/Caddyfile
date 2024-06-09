@@ -41,6 +41,12 @@ portainer.5xx.engineer {
 }
 
 dotfiles.5xx.engineer {
-	respond "Hello dotfiles"
+	root * /srv/dotfiles
+	header {
+		Content-Type text/plain
+	}
+	file_server {
+		index install.sh
+	}
 }
 
