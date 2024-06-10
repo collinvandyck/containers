@@ -2,13 +2,10 @@
 
 set -e
 
-if [ -e ~/.dotfiles ]; then
-	echo "Dotfiles aready installed."
-	exit
+if ! [ -e ~/.dotfiles ]; then
+	git clone https://github.com/collinvandyck/dotfiles.git ~/.dotfiles
 fi
 
-echo "Installing dotfiles..."
-git clone https://github.com/collinvandyck/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 ./install-all
 
