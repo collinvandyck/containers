@@ -50,3 +50,7 @@ dotfiles.5xx.engineer {
 	}
 }
 
+grafana.5xx.engineer {
+	encode zstd gzip
+	reverse_proxy grafana:3000
+}
