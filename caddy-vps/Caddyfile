@@ -54,3 +54,11 @@ grafana.5xx.engineer {
 	encode zstd gzip
 	reverse_proxy grafana:3000
 }
+
+resume.5xx.engineer {
+	encode zstd gzip
+	root * /srv/resume
+	file_server {
+		index 5xx.engineer.html
+	}
+}
