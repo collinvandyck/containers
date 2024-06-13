@@ -215,7 +215,7 @@ services:
 
   caddy:
     build:
-      context: caddy-nas
+      context: caddy/nas
     container_name: caddy
     ports:
       - 2080:80

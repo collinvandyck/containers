@@ -40,7 +40,7 @@ services:
 
   caddy:
     build:
-      context: caddy-vps
+      context: caddy/vps
     container_name: caddy
     privileged: true
     ports:

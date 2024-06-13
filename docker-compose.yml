@@ -41,7 +41,7 @@ services:
 
   caddy:
     build:
-      context: caddy
+      context: caddy/local
     container_name: caddy
     privileged: true
     ports:
