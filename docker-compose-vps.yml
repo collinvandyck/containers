@@ -11,6 +11,10 @@ volumes:
 networks:
   loki:
 
+secrets:
+  glances_pw:
+    file: /root/secrets/glances/collin.pwd
+
 services:
 
   atuin:
@@ -60,7 +64,7 @@ services:
     image: bash
     container_name: bash
     network_mode: host
-    command: ["bash", "-c", "sleep 365"]
+    command: ["bash", "-c", "while sleep 3600; do :; done"]
 
   freshrss:
     image: freshrss/freshrss:latest
@@ -151,3 +155,15 @@ services:
     networks:
       - loki
 
+  glances:
+    container_name: glances
+    image: nicolargo/glances:latest-full
+    restart: unless-stopped
+    pid: host
+    secrets:
+      - source: glances_pw
+        target: /root/.config/glances/glances.pwd
+    environment:
+      GLANCES_OPT: "-w --password"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
