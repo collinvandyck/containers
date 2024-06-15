@@ -12,7 +12,7 @@ volumes:
   prometheus:
 
 networks:
-  loki:
+  metrics:
 
 secrets:
   glances_pw:
@@ -60,7 +60,7 @@ services:
       - caddy-logs:/var/log/caddy
       - /run/tailscale.nginx-auth.sock:/run/tailscale.nginx-auth.sock
     networks:
-      - loki
+      - metrics
       - default
 
   bash:
@@ -116,6 +116,8 @@ services:
       - "--storage.tsdb.path=/prometheus/"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - metrics
 
   loki:
     container_name: loki
@@ -126,7 +128,7 @@ services:
     volumes:
       - loki:/loki
     networks:
-      - loki
+      - metrics
 
   promtail:
     container_name: promtail
@@ -138,7 +140,7 @@ services:
       - caddy-logs:/var/log/caddy
     command: -config.file=/etc/promtail/config.yml
     networks:
-      - loki
+      - metrics
 
   grafana:
     container_name: grafana
@@ -151,7 +153,7 @@ services:
     volumes:
       - grafana-storage:/var/lib/grafana
     networks:
-      - loki
+      - metrics
 
   glances:
     container_name: glances
