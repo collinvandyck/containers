@@ -201,7 +201,7 @@ services:
 
   homeassistant:
     build:
-      context: homeassistant-nas
+      context: homeassistant/nas
     container_name: homeassistant
     network_mode: host
     privileged: true
