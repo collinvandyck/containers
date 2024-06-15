@@ -6,6 +6,7 @@ volumes:
   caddy-logs:
   freshrss_data:
   freshrss_extensions:
+  loki:
   portainer:
   prometheus:
 
@@ -121,6 +122,8 @@ services:
       context: loki/vps
     restart: unless-stopped
     command: -config.file=/etc/loki/config.yaml
+    volumes:
+      - loki:/loki
     networks:
       - loki
 
