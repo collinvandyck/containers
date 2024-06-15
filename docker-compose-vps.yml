@@ -36,7 +36,7 @@ services:
     image: postgres:14
     container_name: atuin-db
     restart: unless-stopped
-    volumes: # Don't remove permanent storage for index database files!
+    volumes:
       - "atuin_postgres:/var/lib/postgresql/data/"
     environment:
       POSTGRES_USER: atuin
@@ -82,15 +82,13 @@ services:
       TZ: America/New_York
       CRON_MIN: '3,33'
 
-  # listens on 3000
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
     build:
       context: homepage-vps
     volumes:
-      # - /path/to/config:/app/config # Make sure your local config directory exists
-      - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
 
   portainer:
@@ -115,11 +113,8 @@ services:
       - "--storage.tsdb.retention.time=730d"
       - "--storage.tsdb.path=/prometheus/"
     extra_hosts:
-      - "host.docker.internal:host-gateway" # enables host.docker.internal as a dns name
+      - "host.docker.internal:host-gateway"
 
-  # port 3100
-  #
-  # todo: set a docker volume to mount at /loki
   loki:
     container_name: loki
     build:
