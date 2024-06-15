@@ -1,46 +1,50 @@
-5xx.engineer  {
-	encode zstd gzip
-	log {
-		output file /var/log/caddy/access.log {
+{
+	log default {
+		output file /var/log/caddy/caddy.log {
 			roll_size 1gb
 			roll_keep 2
 			roll_keep_for 24h
 		}
+		format json
+		include http.log.access admin.api
 	}
+}
+
+5xx.engineer {
+	log
+	encode zstd gzip
 	respond "Hello, {remote_host}:{remote_port}"
 }
 
 atuin.5xx.engineer {
+	log
 	encode zstd gzip
 	reverse_proxy atuin:8888
 }
 
 rss.5xx.engineer {
+	log
 	encode zstd gzip
 	reverse_proxy freshrss:80
-	log {
-		output file /var/log/caddy/access-rss.log {
-			roll_size 1gb
-			roll_keep 2
-			roll_keep_for 24h
-		}
-	}
 }
 
 home.5xx.engineer {
+	log
 	encode zstd gzip
 	reverse_proxy homepage:3000
 }
 
 portainer.5xx.engineer {
-	reverse_proxy https://portainer:9443 { 
-		transport http { 
-			tls tls_insecure_skip_verify 
-		} 
+	log
+	reverse_proxy https://portainer:9443 {
+		transport http {
+			tls tls_insecure_skip_verify
+		}
 	}
 }
 
 dotfiles.5xx.engineer {
+	log
 	root * /srv/dotfiles
 	header {
 		Content-Type text/plain
@@ -51,11 +55,13 @@ dotfiles.5xx.engineer {
 }
 
 grafana.5xx.engineer {
+	log
 	encode zstd gzip
 	reverse_proxy grafana:3000
 }
 
 resume.5xx.engineer {
+	log
 	encode zstd gzip
 	root * /srv/resume
 	file_server {
@@ -67,4 +73,3 @@ glances.5xx.engineer {
 	encode zstd gzip
 	reverse_proxy glances:61208
 }
-
