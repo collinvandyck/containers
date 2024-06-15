@@ -13,10 +13,6 @@ volumes:
   caddy-config:
   homeassistant-config:
 
-secrets:
-  host_ssh_key:
-    file: /var/services/homes/collin/.ssh/id_rsa
-
 services:
 
   registry:
@@ -28,16 +24,6 @@ services:
       - 7000:5000
     volumes:
       - registry:/var/lib/registry
-
-  ubuntu-cli:
-    container_name: ubuntu-cli
-    restart: unless-stopped
-    build:
-      context: ubuntu
-    secrets:
-      - host_ssh_key
-    extra_hosts:
-      - "host.docker.internal:host-gateway" # enables host.docker.internal as a dns name
 
   portainer:
     container_name: portainer
