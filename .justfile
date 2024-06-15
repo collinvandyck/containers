@@ -13,3 +13,6 @@ caddyfmt:
 
 caddylogs:
 	vps dc exec caddy tail -n 1000 -F /var/log/caddy/caddy.log
+
+caddyaccess:
+	vps dc exec caddy cat /var/log/caddy/caddy.log | jq -r '.request.host | select (.!=null)' | sort | uniq -c | sort -nr
