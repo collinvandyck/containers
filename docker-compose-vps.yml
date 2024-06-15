@@ -7,6 +7,7 @@ volumes:
   freshrss_data:
   freshrss_extensions:
   portainer:
+  prometheus:
 
 networks:
   loki:
@@ -100,6 +101,21 @@ services:
     volumes:
       - portainer:/data
       - /var/run/docker.sock:/var/run/docker.sock
+
+  prometheus:
+    container_name: prometheus
+    hostname: prometheus
+    build:
+      context: prometheus/vps
+    restart: unless-stopped
+    volumes:
+      - prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - "--storage.tsdb.retention.time=730d"
+      - "--storage.tsdb.path=/prometheus/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # enables host.docker.internal as a dns name
 
   # port 3100
   #

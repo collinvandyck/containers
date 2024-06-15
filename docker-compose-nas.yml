@@ -104,7 +104,7 @@ services:
     container_name: prometheus
     hostname: prometheus
     build:
-      context: prometheus
+      context: prometheus/nas
     restart: unless-stopped
     volumes:
       - prometheus:/prometheus
