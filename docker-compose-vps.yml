@@ -6,6 +6,7 @@ volumes:
   caddy-logs:
   freshrss_data:
   freshrss_extensions:
+  grafana-storage:
   loki:
   portainer:
   prometheus:
@@ -167,6 +168,8 @@ services:
           editable: false
         EOF
         /run.sh
+    volumes:
+      - grafana-storage:/var/lib/grafana
     networks:
       - loki
 
