@@ -1,3 +1,4 @@
+name: local
 volumes:
   atuin_postgres:
   atuin-config:
@@ -8,15 +9,12 @@ services:
 
   atuin:
     restart: always
-    container_name: atuin
     image: ghcr.io/atuinsh/atuin:18.2.0
     command: server start
     volumes:
       - "atuin-config:/config"
     links:
       - atuin-db:db
-    ports:
-      - 8888:8888
     environment:
       ATUIN_HOST: "0.0.0.0"
       ATUIN_OPEN_REGISTRATION: "false"
@@ -30,7 +28,6 @@ services:
 
   atuin-db:
     image: postgres:14
-    container_name: atuin-db
     restart: unless-stopped
     volumes: # Don't remove permanent storage for index database files!
       - "atuin_postgres:/var/lib/postgresql/data/"
@@ -41,12 +38,8 @@ services:
 
   caddy:
     build:
-      context: caddy/local
-    container_name: caddy
+      context: ../../caddy/local
     privileged: true
-    ports:
-      - 80:80
-      - 443:443
     restart: unless-stopped
     volumes:
       - caddy-data:/data
@@ -60,8 +53,7 @@ services:
 
   homepage:
     build:
-      context: homepage/local
-    container_name: homepage
+      context: ../../homepage/local
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro 
     restart: unless-stopped
