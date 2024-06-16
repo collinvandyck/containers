@@ -1,0 +1,7 @@
+:2024 {
+	respond "Hello, world!!"
+}
+
+:2025 {
+	file_server * browse
+}

@@ -1,3 +1,4 @@
+name: containers
 volumes:
   freshrss_data:
   freshrss_extensions:
@@ -52,7 +53,7 @@ services:
   ngrok:
     container_name: ngrok
     build:
-      context: ngrok/nas
+      context: ngrok
     restart: unless-stopped
     command:
       - "start"
@@ -88,7 +89,7 @@ services:
     container_name: prometheus
     hostname: prometheus
     build:
-      context: prometheus/nas
+      context: prometheus
     restart: unless-stopped
     volumes:
       - prometheus:/prometheus
@@ -113,7 +114,7 @@ services:
 
   smokeping-exporter:
     build:
-      context: smokeping/exporter/nas
+      context: smokeping/exporter
     restart: unless-stopped
     privileged: true
     container_name: smokeping-exporter
@@ -172,7 +173,7 @@ services:
 
   caddy:
     build:
-      context: caddy/nas
+      context: caddy
     container_name: caddy
     ports:
       - 2080:80
