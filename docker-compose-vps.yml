@@ -117,6 +117,7 @@ services:
       context: loki/vps
     restart: unless-stopped
     command: -config.file=/etc/loki/config.yaml
+    mem_limit: 1024m
     volumes:
       - loki:/loki
 
