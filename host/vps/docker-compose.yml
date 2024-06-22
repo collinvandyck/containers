@@ -9,6 +9,8 @@ volumes:
   freshrss_extensions:
   grafana-storage:
   loki:
+  pihole:
+  pihole_dnsmasq:
   portainer:
   prometheus:
   promtail:
@@ -157,4 +159,15 @@ services:
       GLANCES_OPT: "-w --password"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    environment:
+      - TZ=America/Chicago
+      - WEBPASSWORD=${PIHOLE_PASSWORD}
+    volumes:
+      - pihole:/etc/pihole
+      - pihole_dnsmasq:/etc/dnsmasq.d
+    restart: unless-stopped
 
