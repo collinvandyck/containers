@@ -1,12 +1,12 @@
 {
-	log default {
-		output file /var/log/caddy/caddy.log {
+	log access {
+		output file /var/log/caddy/access.log {
 			roll_size 1gb
 			roll_keep 2
 			roll_keep_for 24h
 		}
 		format json
-		include http.log.access admin.api
+		include http.log.access
 	}
 }
 
@@ -74,6 +74,6 @@ glances.5xx.engineer {
 	reverse_proxy glances:61208
 }
 
-pihole.vps.5xx.engineer {
+pihole.vpn.5xx.engineer {
 	respond "pihole"
 }
