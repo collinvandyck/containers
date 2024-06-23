@@ -1,18 +1,25 @@
 caddyconfig:
 	dc exec caddy curl -Ss localhost:2019/config/
 
-caddypush:
-	#!/usr/bin/env bash
-	cat caddy/Caddyfile	| vps dc exec -T caddy curl \
-		-Ss -H 'Content-Type: text/caddyfile' \
-		--data-binary @- \
-		localhost:2019/load
+push:
+	scripts/caddypush
+
+caddypush: caddyfmt
+	dc cp caddy/Caddyfile caddy:/tmp/Caddyfile
+	dc exec -T caddy curl \
+			-Ss -H 'Content-Type:text/caddyfile' \
+			--data-binary @/tmp/Caddyfile \
+			localhost:2019/load
 
 caddyfmt:
 	caddy fmt caddy/Caddyfile --overwrite
 
 caddylogs:
-	dc exec caddy tail -n 1000 -F /var/log/caddy/caddy.log
+	dc exec caddy tail -n 1000 -F /var/log/caddy/caddy.log |tspin
 
 caddyaccess:
 	dc exec caddy cat /var/log/caddy/caddy.log | jq -r '.request.host | select (.!=null)' | sort | uniq -c | sort -nr
+
+debug:
+	echo $DOCKER_HOST
+
