@@ -73,3 +73,7 @@ glances.5xx.engineer {
 	encode zstd gzip
 	reverse_proxy glances:61208
 }
+
+pihole.vps.5xx.engineer {
+	respond "pihole"
+}
