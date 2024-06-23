@@ -52,8 +52,12 @@ services:
     container_name: caddy
     privileged: true
     ports:
-      - 80:80
-      - 443:443
+      - name: http
+        target: "80"
+        published: "80"
+      - name: https
+        target: "443"
+        published: "443"
     restart: unless-stopped
     volumes:
       - caddy-data:/data
