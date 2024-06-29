@@ -203,7 +203,7 @@ services:
   tailscale:
     image: tailscale/tailscale:latest
     container_name: tailscale
-    hostname: vps-tailscale
+    hostname: nas-tailscale
     volumes:
       - tailscale:/var/lib/tailscale
       - /dev/net/tun:/dev/net/tun
