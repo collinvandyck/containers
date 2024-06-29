@@ -13,6 +13,7 @@ volumes:
   caddy-data:
   caddy-config:
   homeassistant-config:
+  tailscale:
 
 services:
 
@@ -199,4 +200,18 @@ services:
       - homeassistant-config:/config
       - /run/dbus:/run/dbus:ro
 
-
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    hostname: vps-tailscale
+    volumes:
+      - tailscale:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TS_EXTRA_ARGS=--advertise-routes=192.168.0.0/24
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
