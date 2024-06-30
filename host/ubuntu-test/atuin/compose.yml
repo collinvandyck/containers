@@ -1,5 +1,3 @@
-version: '3'
-
 volumes:
   atuin_postgres:
   atuin-config:
@@ -14,17 +12,14 @@ services:
     environment:
       ATUIN_HOST: "0.0.0.0"
       ATUIN_OPEN_REGISTRATION: "false"
-    env_file:
-      - ./.atuin.env
+      ATUIN_DB_URI: "postgres://atuin:changeme123@db/atuin"
+      RUST_LOG: debug,atuin_server=debug
 
-  atuin-db:
+  db:
     image: postgres:14
     volumes:
       - "atuin_postgres:/var/lib/postgresql/data/"
     environment:
       POSTGRES_USER: atuin
       POSTGRES_DB: atuin
-    env_file:
-      - ./.atuin-db.env
-
-
+      POSTGRES_PASSWORD: changeme123
