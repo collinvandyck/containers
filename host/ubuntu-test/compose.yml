@@ -1,0 +1,64 @@
+volumes:
+  atuin_postgres:
+  atuin-config:
+  caddy-data:
+  caddy-config:
+  caddy-logs:
+
+services:
+
+  caddy:
+    build: caddy
+    image: 127.0.0.1:5000/caddy
+    ports:
+      - published: 80
+        target: 80
+        protocol: tcp
+        mode: host
+      - "443:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+      - caddy-logs:/var/log/caddy
+      - /run/tailscale.nginx-auth.sock:/run/tailscale.nginx-auth.sock
+
+  atuin:
+    image: ghcr.io/atuinsh/atuin:18.2.0
+    entrypoint: |
+      sh -c '
+        POSTGRES_PASSWORD=$$(cat /run/secrets/atuin-postgres-pw)
+        export ATUIN_DB_URI="postgres://atuin:$${POSTGRES_PASSWORD}@db/atuin"
+        exec /usr/local/bin/atuin server start
+      '
+    volumes:
+      - "atuin-config:/config"
+    environment:
+      ATUIN_HOST: "0.0.0.0"
+      ATUIN_OPEN_REGISTRATION: "false"
+      ATUIN_DB_URI: "postgres://atuin:changeme123@db/atuin"
+      RUST_LOG: debug,atuin_server=debug
+    secrets:
+      - atuin-postgres-pw
+
+  db:
+    image: postgres:14
+    entrypoint: |
+      sh -c '
+        export POSTGRES_PASSWORD=$$(cat /run/secrets/atuin-postgres-pw)
+        exec /usr/local/bin/docker-entrypoint.sh postgres
+      '
+    volumes:
+      - "atuin_postgres:/var/lib/postgresql/data/"
+    environment:
+      POSTGRES_USER: atuin
+      POSTGRES_DB: atuin
+      POSTGRES_PASSWORD: changeme123
+    secrets:
+      - atuin-postgres-pw
+
+secrets:
+  atuin-postgres-pw:
+    external: true
+

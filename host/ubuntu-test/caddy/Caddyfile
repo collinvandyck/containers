@@ -1,0 +1,6 @@
+ubuntu-test:80 {
+	log
+	encode zstd gzip
+	respond "Hello, {remote_host}:{remote_port}"
+}
+
