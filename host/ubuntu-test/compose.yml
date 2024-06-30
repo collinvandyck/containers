@@ -7,6 +7,14 @@ volumes:
 
 services:
 
+  traefik:
+    image: traefik/whoami
+    ports:
+      - published: 81
+        target: 80
+        protocol: tcp
+        mode: host
+
   caddy:
     build: caddy
     image: 127.0.0.1:5000/caddy
@@ -16,8 +24,6 @@ services:
         protocol: tcp
         mode: host
       - "443:443"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
       - caddy-data:/data
       - caddy-config:/config
