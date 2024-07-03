@@ -18,6 +18,8 @@ volumes:
 secrets:
   glances_pw:
     file: /root/secrets/glances/collin.pwd
+  smb_pw:
+    file: /root/secrets/smb/collin.pwd
 
 services:
 
@@ -172,4 +174,20 @@ services:
       - pihole:/etc/pihole
       - pihole_dnsmasq:/etc/dnsmasq.d
     restart: unless-stopped
+
+  smb:
+    build: 
+      context: smb
+    container_name: smb
+    environment:
+      - SMB_PASSWORD_FILE=/secrets/collin.pwd
+    secrets:
+      - source: smb_pw
+        target: /secrets/collin.pwd
+    ports:
+      - "137:137"
+      - "138:138"
+      - "139:139"
+      - "445:445"
+
 
