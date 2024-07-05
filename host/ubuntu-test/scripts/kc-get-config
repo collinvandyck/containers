@@ -3,4 +3,5 @@
 set -euo pipefail
 
 dir=$(dirname "$0")
-scp root@ubuntu-test:/etc/rancher/k3s/k3s.yaml $dir/../k3s.yaml
+scp -q root@ubuntu-test:/etc/rancher/k3s/k3s.yaml "$dir"/../k3s.yaml
+sed -e 's/server: .*/server: https:\/\/ubuntu-test:6443/' -i '' k3s.yaml
