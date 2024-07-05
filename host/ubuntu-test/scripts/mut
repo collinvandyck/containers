@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+    echo "$(basename $0) [up|down|list]"
+    exit 1
+}
+
+[ $# -eq 0 ] && usage
+
+name=ubuntu-test
+
+case "$1" in
+    "up")
+        mutagen forward create --name "$name" tcp:localhost:8001 tcp:ubuntu-test:6443
+        ;;
+    "down")
+        mutagen forward terminate "$name"
+        ;;
+    "list")
+        mutagen forward list "$name"
+        ;;
+    *)
+        usage
+        ;;
+esac
+

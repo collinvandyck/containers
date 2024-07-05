@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+dir=$(dirname "$0")
+scp root@ubuntu-test:/etc/rancher/k3s/k3s.yaml $dir/../k3s.yaml
