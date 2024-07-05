@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+kubectl get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}'
