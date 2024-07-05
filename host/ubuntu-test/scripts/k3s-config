@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Fetches the k8s config from the k3s server and installs it to the set location
+
 set -euo pipefail
 
 dir=$(dirname "$0")
