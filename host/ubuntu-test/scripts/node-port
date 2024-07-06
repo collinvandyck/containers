@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# gets the node_port for the specified service
+#
+# e.g. curl http://ubuntu-test:$(node-port kubernetes-bootcamp)
+
+set -euo pipefail
+
+kc get "services/$1" -o go-template='{{(index .spec.ports 0).nodePort}}'
