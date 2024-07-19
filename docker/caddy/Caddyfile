@@ -1,0 +1,33 @@
+# This is basically the simplest possible Caddy config with Tailscale.
+# This will register a new node using the auth key in the TS_AUTHKEY env var.
+# The new node will be named "caddy", and will have a site running on port 80
+# which simply responds "OK" to all requests.
+
+# This block isn't necessary for the simplest config,
+# but is included to ensure that nodes are registered as ephemeral.
+{
+  tailscale {
+    ephemeral
+  }
+}
+
+ #This site will run at <http://caddy/>.
+#:80 {
+  #bind tailscale/foo
+  #respond OK
+#}
+
+# this works. you have to either export the key or click the link in the
+# logstream in order to auth the contianer. but it was able to
+# provision the certificate after a small delay.
+#
+# next steps:
+# - will need to bind a storage volume to persist the state when
+#   deployed to the vps.
+# - experiment with different hostnames both binding to the same
+#   logical tailscale/name, so that i don't have to use a tailnet
+#   domain but i would still be only able to access it on the tailnet.
+https://foo.neon-stargazer.ts.net {
+    bind tailscale/foo
+    respond OK
+}
