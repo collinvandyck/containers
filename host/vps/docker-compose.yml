@@ -28,6 +28,8 @@ services:
     container_name: atuin
     image: ghcr.io/atuinsh/atuin:18.3.0
     command: server start
+    ports:
+      - "127.0.0.1:8888:8888"
     volumes:
       - "atuin-config:/config"
     links:
@@ -53,9 +55,7 @@ services:
       context: caddy
     container_name: caddy
     privileged: true
-    ports:
-      - "80:80"
-      - "443:443"
+    network_mode: host
     restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -75,6 +75,8 @@ services:
     container_name: freshrss
     hostname: freshrss
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:8880:80"
     logging:
       options:
         max-size: 10m
@@ -90,6 +92,8 @@ services:
     container_name: homepage
     build:
       context: homepage
+    ports:
+      - "127.0.0.1:8881:3000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
@@ -99,6 +103,8 @@ services:
     hostname: portainer
     image: portainer/portainer-ce:latest
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:8882:9443"
     volumes:
       - portainer:/data
       - /var/run/docker.sock:/var/run/docker.sock
@@ -145,6 +151,8 @@ services:
     build:
       context: grafana
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:8883:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${VPS_GRAFANA_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${VPS_GRAFANA_ADMIN_PASSWORD}
@@ -156,6 +164,8 @@ services:
     image: nicolargo/glances:latest-full
     restart: unless-stopped
     pid: host
+    ports:
+      - "127.0.0.1:8884:61208"
     secrets:
       - source: glances_pw
         target: /root/.config/glances/glances.pwd
@@ -176,7 +186,7 @@ services:
     restart: unless-stopped
 
   smb:
-    build: 
+    build:
       context: smb
     container_name: smb
     environment:
@@ -189,5 +199,4 @@ services:
       - "138:138"
       - "139:139"
       - "445:445"
-
 
