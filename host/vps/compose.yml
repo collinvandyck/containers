@@ -23,6 +23,21 @@ secrets:
 
 services:
 
+  caddy:
+    build:
+      context: caddy
+    container_name: caddy
+    privileged: true
+    network_mode: host
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+      - caddy-logs:/var/log/caddy
+      - /run/tailscale.nginx-auth.sock:/run/tailscale.nginx-auth.sock
+
   atuin:
     restart: always
     container_name: atuin
@@ -49,21 +64,6 @@ services:
       POSTGRES_USER: atuin
       POSTGRES_PASSWORD: ${ATUIN_POSTGRES_PASSWORD}
       POSTGRES_DB: atuin
-
-  caddy:
-    build:
-      context: caddy
-    container_name: caddy
-    privileged: true
-    network_mode: host
-    restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    volumes:
-      - caddy-data:/data
-      - caddy-config:/config
-      - caddy-logs:/var/log/caddy
-      - /run/tailscale.nginx-auth.sock:/run/tailscale.nginx-auth.sock
 
   bash:
     image: bash

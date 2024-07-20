@@ -10,7 +10,7 @@
 	}
 }
 
-5xx.engineer {
+5xx.engineer vps.neon-stargazer.ts.net {
 	log
 	encode zstd gzip
 	respond "Hello, {remote_host}:{remote_port}"
