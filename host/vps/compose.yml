@@ -177,6 +177,8 @@ services:
   pihole:
     container_name: pihole
     image: pihole/pihole:latest
+    ports:
+      - "127.0.0.1:8885:80"
     environment:
       - TZ=America/Chicago
       - WEBPASSWORD=${PIHOLE_PASSWORD}

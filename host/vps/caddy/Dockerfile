@@ -6,4 +6,4 @@ FROM caddy:2.8.4
 RUN apk add curl
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 COPY ./Caddyfile /etc/caddy/Caddyfile
-
+COPY html /srv

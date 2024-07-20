@@ -1,4 +1,7 @@
 {
+    tailscale {
+        ephemeral # create all nodes as ephemeral
+    }
 	log access {
 		output file /var/log/caddy/access.log {
 			roll_size 1gb
@@ -74,21 +77,8 @@ glances.5xx.engineer {
 	reverse_proxy localhost:8884
 }
 
-pihole.vpn.5xx.engineer {
-	log {
-		output file /var/log/caddy/pihole.log
-		format json
-	}
-	respond "pihole remote-host:{remote_host} remote:{remote}"
-
-	# if caddy running in bridged mode, it will only see the docker gateway ip
-	# address, and as such forward_auth + tailscale will not work since it is
-	# not a tailnet ip.
-	#
-	# running caddy in host mode means that it will not be able to connect to
-	# other reverse proxies that are running behind the bridge.
-	#
-	# it's possible that i probably just need a different deployment mechanism
-	# besides docker-compose. Until then, this vhost will remain unconnected to
-	# the pihole container.
+# sites only accessible over the vpn
+pihole.neon-stargazer.ts.net {
+    bind tailscale/pihole
+	reverse_proxy localhost:8885
 }
