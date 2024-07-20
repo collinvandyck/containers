@@ -184,6 +184,8 @@ services:
     environment:
       - TZ=America/Chicago
       - WEBPASSWORD=${PIHOLE_PASSWORD}
+      - VIRTUAL_HOST=pihole.neon-stargazer.ts.net
+      - DNSMASQ_LISTENING=all
     volumes:
       - pihole:/etc/pihole
       - pihole_dnsmasq:/etc/dnsmasq.d
