@@ -178,6 +178,8 @@ services:
     container_name: pihole
     image: pihole/pihole:latest
     ports:
+      - "100.123.179.103:53:53/tcp"
+      - "100.123.179.103:53:53/udp"
       - "127.0.0.1:8885:80"
     environment:
       - TZ=America/Chicago
