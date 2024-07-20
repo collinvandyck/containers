@@ -185,18 +185,3 @@ services:
       - pihole_dnsmasq:/etc/dnsmasq.d
     restart: unless-stopped
 
-  smb:
-    build:
-      context: smb
-    container_name: smb
-    environment:
-      - SMB_PASSWORD_FILE=/secrets/collin.pwd
-    secrets:
-      - source: smb_pw
-        target: /secrets/collin.pwd
-    ports:
-      - "137:137"
-      - "138:138"
-      - "139:139"
-      - "445:445"
-
