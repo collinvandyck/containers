@@ -78,8 +78,15 @@ glances.5xx.engineer {
 }
 
 # sites only accessible over the vpn
-pihole.neon-stargazer.ts.net {
+
+https://nextcloud.neon-stargazer.ts.net {
+    bind tailscale/nextcloud
+    reverse_proxy localhost:8090
+}
+
+https://pihole.neon-stargazer.ts.net {
     bind tailscale/pihole
     redir / /admin
     reverse_proxy localhost:8885
 }
+
