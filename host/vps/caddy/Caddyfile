@@ -72,17 +72,17 @@ resume.5xx.engineer {
 	}
 }
 
-glances.5xx.engineer {
-	encode zstd gzip
-	reverse_proxy localhost:8884
-}
-
 archivebox.5xx.engineer {
 	encode zstd gzip
 	reverse_proxy localhost:8091
 }
 
 # sites only accessible over the vpn
+
+https://glances.neon-stargazer.ts.net {
+    bind tailscale/glances
+    reverse_proxy localhost:8884
+}
 
 https://nextcloud.neon-stargazer.ts.net {
     bind tailscale/nextcloud

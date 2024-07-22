@@ -166,11 +166,8 @@ services:
     pid: host
     ports:
       - "127.0.0.1:8884:61208"
-    secrets:
-      - source: glances_pw
-        target: /root/.config/glances/glances.pwd
     environment:
-      GLANCES_OPT: "-w --password"
+      GLANCES_OPT: "-w"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
