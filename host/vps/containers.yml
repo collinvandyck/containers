@@ -30,6 +30,8 @@ services:
     privileged: true
     network_mode: host
     restart: unless-stopped
+    environment:
+      - "CADDY_HETZNER_DNS_TOKEN=${CADDY_HETZNER_DNS_TOKEN}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

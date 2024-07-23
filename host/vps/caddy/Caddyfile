@@ -77,6 +77,16 @@ archivebox.5xx.engineer {
 	reverse_proxy localhost:8091
 }
 
+# sites only accssible over the vpn but with caddy certificate
+# provisioning.
+
+foo.vps.5xx.engineer  {
+  tls {
+    dns hetzner {env.CADDY_HETZNER_DNS_TOKEN}
+  }
+  respond "foo @ vps ({remote_host}:{remote_port})"
+}
+
 # sites only accessible over the vpn
 
 https://glances.neon-stargazer.ts.net {
