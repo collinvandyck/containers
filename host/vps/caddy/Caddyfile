@@ -104,3 +104,8 @@ https://proxmox.neon-stargazer.ts.net {
     }
 }
 
+https://immich.neon-stargazer.ts.net {
+    bind tailscale/immich
+    reverse_proxy http://localhost:2283
+}
+
