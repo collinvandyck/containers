@@ -95,3 +95,12 @@ https://pihole.neon-stargazer.ts.net {
     reverse_proxy localhost:8885
 }
 
+https://proxmox.neon-stargazer.ts.net {
+    bind tailscale/proxmox
+    reverse_proxy https://192.168.0.137:8006 {
+        transport http {
+            tls tls_insecure_skip_verify
+        }
+    }
+}
+
