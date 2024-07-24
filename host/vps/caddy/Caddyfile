@@ -80,11 +80,25 @@ archivebox.5xx.engineer {
 # sites only accssible over the vpn but with caddy certificate
 # provisioning.
 
-foo.vps.5xx.engineer  {
+#foo.vps.5xx.engineer  {
+  #tls {
+    #dns hetzner {env.CADDY_HETZNER_DNS_TOKEN}
+  #}
+  #respond "foo @ vps ({remote_host}:{remote_port})"
+#}
+
+foo.baz.5xx.engineer  {
   tls {
     dns hetzner {env.CADDY_HETZNER_DNS_TOKEN}
   }
-  respond "foo @ vps ({remote_host}:{remote_port})"
+  respond "foo @ baz ({remote_host}:{remote_port})"
+}
+
+foobar.5xx.engineer  {
+  tls {
+    dns hetzner {env.CADDY_HETZNER_DNS_TOKEN}
+  }
+  respond "foobar ({remote_host}:{remote_port})"
 }
 
 # sites only accessible over the vpn
@@ -112,6 +126,11 @@ https://proxmox.neon-stargazer.ts.net {
             tls tls_insecure_skip_verify
         }
     }
+}
+
+https://asus-router.neon-stargazer.ts.net {
+    bind tailscale/asus-router
+    reverse_proxy http://192.168.0.1
 }
 
 https://immich.neon-stargazer.ts.net {
