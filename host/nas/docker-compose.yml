@@ -113,17 +113,6 @@ services:
     ports:
       - 3000:3000
 
-  smokeping-exporter:
-    build:
-      context: smokeping/exporter
-    restart: unless-stopped
-    privileged: true
-    container_name: smokeping-exporter
-    command:
-      - "--config.file=/etc/smokeping.yml"
-    ports:
-      - 9374:9374
-
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
