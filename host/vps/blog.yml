@@ -1,0 +1,6 @@
+name: blog
+services:
+    blog:
+        image: collinvandyck/blog
+        ports:
+          - 127.0.0.1:8092:8080

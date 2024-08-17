@@ -2,106 +2,121 @@
     tailscale {
         ephemeral # create all nodes as ephemeral
     }
-	log access {
-		output file /var/log/caddy/access.log {
-			roll_size 1gb
-			roll_keep 2
-			roll_keep_for 24h
-		}
-		format json
-		include http.log.access
-	}
+    log access {
+        output file /var/log/caddy/access.log {
+            roll_size 1gb
+            roll_keep 2
+            roll_keep_for 24h
+        }
+        format json
+        include http.log.access
+    }
 }
 
-5xx.engineer vps.neon-stargazer.ts.net {
-	log
-	encode zstd gzip
-	respond "Hello, {remote_host}:{remote_port}"
+vps.neon-stargazer.ts.net {
+    log
+    encode zstd gzip
+    respond "Hello, {remote_host}:{remote_port}"
+}
+
+5xx.engineer {
+    redir https://www.5xx.engineer{uri}
+}
+
+www.5xx.engineer {
+    log {
+        output file /var/log/caddy/access-www.log {
+            roll_size 1gb
+            roll_keep 2
+            roll_keep_for 24h
+        }
+        format json
+    }
+    encode zstd gzip
+    reverse_proxy localhost:8092
 }
 
 atuin.5xx.engineer {
-	log
-	encode zstd gzip
-	reverse_proxy localhost:8888
+    log
+    encode zstd gzip
+    reverse_proxy localhost:8888
 }
 
 rss.5xx.engineer {
-	log
-	encode zstd gzip
-	reverse_proxy localhost:8880
+    log
+    encode zstd gzip
+    reverse_proxy localhost:8880
 }
 
 home.5xx.engineer {
-	log
-	encode zstd gzip
-	reverse_proxy localhost:8881
+    log
+    encode zstd gzip
+    reverse_proxy localhost:8881
 }
 
 portainer.5xx.engineer {
-	log
-	reverse_proxy https://localhost:8882 {
-		transport http {
-			tls tls_insecure_skip_verify
-		}
-	}
+    log
+    reverse_proxy https://localhost:8882 {
+        transport http {
+            tls tls_insecure_skip_verify
+        }
+    }
 }
 
 dotfiles.5xx.engineer {
-	log
-	root * /srv/dotfiles
-	header {
-		Content-Type text/plain
-	}
-	file_server {
-		index install.sh
-	}
+    log
+    root * /srv/dotfiles
+    header {
+        Content-Type text/plain
+    }
+    file_server {
+        index install.sh
+    }
 }
 
 grafana.5xx.engineer {
-	log
-	encode zstd gzip
-	reverse_proxy localhost:8883
+    log
+    encode zstd gzip
+    reverse_proxy localhost:8883
 }
 
 resume.5xx.engineer {
-	log
-	encode zstd gzip
-	root * /srv/resume
-	file_server {
-		index 5xx.engineer.html
-	}
+    log
+    encode zstd gzip
+    root * /srv/resume
+    file_server {
+        index 5xx.engineer.html
+    }
 }
 
 archivebox.5xx.engineer {
-	encode zstd gzip
-	reverse_proxy localhost:8091
+    encode zstd gzip
+    reverse_proxy localhost:8091
 }
 
 # sites only accssible over the vpn but with caddy certificate
 # provisioning.
 
-#foo.vps.5xx.engineer  {
-  #tls {
-    #dns hetzner {env.CADDY_HETZNER_DNS_TOKEN}
-  #}
-  #respond "foo @ vps ({remote_host}:{remote_port})"
-#}
-
-foo.baz.5xx.engineer  {
-  tls {
-    dns hetzner {env.CADDY_HETZNER_DNS_TOKEN}
-  }
-  respond "foo @ baz ({remote_host}:{remote_port})"
+foo.baz.5xx.engineer {
+    tls {
+        dns hetzner {env.CADDY_HETZNER_DNS_TOKEN}
+    }
+    respond "foo @ baz ({remote_host}:{remote_port})"
 }
 
-foobar.5xx.engineer  {
-  tls {
-    dns hetzner {env.CADDY_HETZNER_DNS_TOKEN}
-  }
-  respond "foobar ({remote_host}:{remote_port})"
+foobar.5xx.engineer {
+    tls {
+        dns hetzner {env.CADDY_HETZNER_DNS_TOKEN}
+    }
+    respond "foobar ({remote_host}:{remote_port})"
 }
 
 # sites only accessible over the vpn
+
+https://blog.neon-stargazer.ts.net {
+    bind tailscale/blog
+    reverse_proxy localhost:8092
+}
 
 https://glances.neon-stargazer.ts.net {
     bind tailscale/glances
@@ -137,4 +152,3 @@ https://immich.neon-stargazer.ts.net {
     bind tailscale/immich
     reverse_proxy http://localhost:2283
 }
-
