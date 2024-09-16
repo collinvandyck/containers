@@ -1,6 +1,7 @@
 name: blog
 services:
     blog:
+        restart: unless-stopped
         image: collinvandyck/blog
         ports:
           - 127.0.0.1:8092:8080
