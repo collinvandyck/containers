@@ -7,6 +7,10 @@ deploy-resume:
     dc -f containers.yml build caddy
     dc -f containers.yml up -d caddy
 
+deploy-blog:
+    dc -f blog.yml pull
+    dc -f blog.yml up -d --force-recreate blog
+
 caddyconfig:
 	dc exec caddy curl -Ss localhost:2019/config/
 
