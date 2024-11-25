@@ -1,3 +1,8 @@
+copy-resume:
+    cp ../../../resume/5xx.engineer.html caddy/html/resume/
+    cp ../../../resume/5xx.engineer.pdf caddy/html/resume/
+    cp ../../../resume/style.css caddy/html/resume/
+
 caddyconfig:
 	dc exec caddy curl -Ss localhost:2019/config/
 
