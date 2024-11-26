@@ -28,7 +28,7 @@ caddyfmt:
 	caddy fmt caddy/Caddyfile --overwrite
 
 caddylogs:
-	dc exec caddy tail -n 1000 -F /var/log/caddy/access.log |tspin
+	dc -f containers.yml exec caddy tail -n 1000 -F /var/log/caddy/caddy.log |tspin
 
 caddyaccess:
 	dc exec caddy cat /var/log/caddy/caddy.log | jq -r '.request.host | select (.!=null)' | sort | uniq -c | sort -nr
