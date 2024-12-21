@@ -144,6 +144,11 @@ https://pihole.neon-stargazer.ts.net {
 	reverse_proxy localhost:8885
 }
 
+https://openwebui.neon-stargazer.ts.net {
+	bind tailscale/openwebui
+	reverse_proxy localhost:8093
+}
+
 https://proxmox.neon-stargazer.ts.net {
 	bind tailscale/proxmox
 	reverse_proxy https://192.168.0.137:8006 {
