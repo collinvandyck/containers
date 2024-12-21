@@ -1,3 +1,7 @@
+deploy-caddy:
+    dc -f containers.yml build caddy
+    dc -f containers.yml up -d caddy
+
 copy-resume:
     cp ../../../resume/5xx.engineer.html caddy/html/resume/
     cp ../../../resume/5xx.engineer.pdf caddy/html/resume/
