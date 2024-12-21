@@ -1,0 +1,14 @@
+name: ai
+volumes:
+  openwebuidata:
+services:
+    openwebui:
+        image: ghcr.io/open-webui/open-webui:main
+        restart: unless-stopped
+        ports:
+          - 127.0.0.1:8093:8080
+        volumes:
+          - openwebuidata:/app/backend/data
+        environment:
+            OLLAMA_BASE_URL: http://ryzen:11434
+
