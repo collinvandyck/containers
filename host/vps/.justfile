@@ -1,3 +1,10 @@
+openwebui:
+    #!/usr/bin/env bash
+    export COMPOSE_FILE=ai.yml
+    dc pull openwebui
+    dc up -d --force-recreate openwebui
+    dc logs -f openwebui
+
 deploy-caddy:
     dc -f containers.yml build caddy
     dc -f containers.yml up -d caddy

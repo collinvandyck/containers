@@ -11,4 +11,5 @@ services:
           - openwebuidata:/app/backend/data
         environment:
             OLLAMA_BASE_URL: http://ryzen:11434
+            OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
 
