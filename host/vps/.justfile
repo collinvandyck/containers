@@ -11,6 +11,10 @@ langflow:
     cp -r "$BOBIVERSE"/* langflow/data/bobiverse
     dc -f ai.yml up -d --build langflow
 
+deploy-atuin:
+    dc -f containers.yml pull atuin
+    dc -f containers.yml up -d atuin
+
 deploy-caddy:
     dc -f containers.yml build caddy
     dc -f containers.yml up -d caddy

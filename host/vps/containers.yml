@@ -43,7 +43,7 @@ services:
   atuin:
     restart: always
     container_name: atuin
-    image: ghcr.io/atuinsh/atuin:18.3.0
+    image: ghcr.io/atuinsh/atuin:18.4.0
     command: server start
     ports:
       - "127.0.0.1:8888:8888"
