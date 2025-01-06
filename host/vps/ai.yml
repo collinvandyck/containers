@@ -1,6 +1,12 @@
 name: ai
 volumes:
   openwebuidata:
+  pipelines:
+  langflow-postgres:
+  langflow-data:
+  chroma-data:
+  redis-data:
+
 services:
     openwebui:
         image: ghcr.io/open-webui/open-webui:main
@@ -12,4 +18,59 @@ services:
         environment:
             OLLAMA_BASE_URL: http://ryzen:11434
             OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
+
+    pipelines:
+        image: ghcr.io/open-webui/pipelines:main
+        restart: unless-stopped
+        ports:
+          - 127.0.0.1:8094:9099
+        volumes:
+          - pipelines:/app/pipelines
+
+    tika:
+      image: apache/tika:latest-full
+      container_name: tika
+      #ports:
+        #- "9998:9998"
+      restart: unless-stopped
+
+    langflow:
+      build:
+        context: langflow
+      pull_policy: always
+      restart: unless-stopped
+      ports:
+        - 127.0.0.1:8095:7860
+      depends_on:
+        - langflow-postgres
+      environment:
+        LANGFLOW_DATABASE_URL: postgresql://langflow:langflow@langflow-postgres:5432/langflow
+        LANGFLOW_LOG_LEVEL: debug
+        #SECRET_KEY: ${LANGFLOW_SECRET_KEY}
+        COLUMNS: 200
+      volumes:
+        - langflow-data:/app/langflow
+
+    langflow-postgres:
+      image: postgres:16
+      restart: unless-stopped
+      environment:
+        POSTGRES_USER: langflow
+        POSTGRES_PASSWORD: langflow
+        POSTGRES_DB: langflow
+      volumes:
+        - langflow-postgres:/var/lib/postgresql/data
+
+    redis:
+      image: redis
+      restart: unless-stopped
+      command: redis-server --save 60 1 --loglevel warning
+      volumes:
+        - redis-data:/data
+
+    chroma:
+      image: chromadb/chroma
+      restart: unless-stopped
+      volumes:
+        - chroma-data:/index_data
 

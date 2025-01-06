@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -eu
+
+cd "$(dirname $0)"/..
+mkdir -p sources
+
+if [[ ! -d sources/langflow ]]; then
+    git -C sources clone --depth 1 https://github.com/langflow-ai/langflow.git
+else
+    git -C sources/langflow pull
+fi

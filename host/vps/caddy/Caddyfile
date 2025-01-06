@@ -149,6 +149,11 @@ https://openwebui.neon-stargazer.ts.net {
 	reverse_proxy localhost:8093
 }
 
+https://langflow.neon-stargazer.ts.net {
+	bind tailscale/langflow
+	reverse_proxy localhost:8095
+}
+
 https://proxmox.neon-stargazer.ts.net {
 	bind tailscale/proxmox
 	reverse_proxy https://192.168.0.137:8006 {

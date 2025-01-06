@@ -1,0 +1,40 @@
+I'm following the docker deployment instructions using the docker_example langchain folder.
+docker-compose.yml:
+langflow:
+  build:
+    dockerfile: Dockerfile.langflow
+  platform: linux/amd64
+  pull_policy: always
+  restart: unless-stopped
+  ports:
+    - "7860:7860"
+  depends_on:
+    - langflow-postgres
+  environment:
+    LANGFLOW_DATABASE_URL: postgresql://langflow:langflow@langflow-postgres:5432/langflow
+    LANGFLOW_LOG_LEVEL: debug
+    COLUMNS: 200
+  volumes:
+    - langflow-data:/app/langflow
+I've also added langchain-chroma to the docker image by creating my own image:
+FROM langflowai/langflow:latest
+RUN pip install -qU "langchain-chroma>=0.1.2"
+I'm on a MBP M2, and am running the containers on Orbstack.
+For the most part, everything seems to run ok. I can wire up inputs, and generate outputs. But when trying to use the Chromadb component, without fail, the container crashes when it tries to run the Chromadb component. This is the typical output in the langchain logs when this happens:
+- chat - consumed event vertices_sorted-1b5b20c2-b025-415d-8ea8-630d9230c068 (time in queue, 0.0001, client 0.0000)
+- base - Building File
+- chat - consumed event end_vertex-9417b8f2-116b-4ff8-908c-8103e0ca5389 (time in queue, 0.0000, client 0.0001)
+- base - Building Split Text
+- utils - Logged transaction: 4682d5ac-5773-44c9-a347-8766a0276b77
+- chat - consumed event end_vertex-a25c3f17-ee42-4cb9-8467-f366e80fb70a (time in queue, 0.0001, client 0.0001)
+- base - Building OpenAI Embeddings
+- chat - consumed event end_vertex-7d5e0422-739d-44b9-89c5-4acdea39672d (time in queue, 0.0000, client 0.0001)
+- base - Building Chroma DB
+- utils - Logged transaction: 5b30b912-ddfc-41d3-aab7-a9a3b60ed9be
+- utils - Logged transaction: 88aea75e-cf7b-4e23-b6ed-a14183aa16ac
+- __init__ - Worker (pid:29) was sent SIGILL!
+- __init__ - Booting worker with pid: 52
+- __init__ - Started server process [52]
+- __init__ - Waiting for application startup.
+Is there an obvious step that I'm missing?
+I suspect it might be due to the fact that langflow doesn't seem to have an arm64 image, requiring me to use Rosetta (however, the other components I have used thus far have worked ok).
