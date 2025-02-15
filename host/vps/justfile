@@ -15,6 +15,11 @@ deploy-atuin:
     dc -f containers.yml pull atuin
     dc -f containers.yml up -d atuin
 
+caddy-mark-stable:
+    #!/usr/bin/env bash
+    stable="$(docker inspect caddy --format '{{{{.Image}}')"
+    echo docker tag ${stable} containers-caddy:stable
+
 deploy-caddy:
     dc -f containers.yml build caddy
     dc -f containers.yml up -d caddy
