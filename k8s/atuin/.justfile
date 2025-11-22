@@ -74,3 +74,54 @@ deploy: create-secrets apply
 # Clean up everything including namespace (WARNING: deletes all data)
 clean:
     kubectl delete namespace atuin --ignore-not-found=true
+
+# Check certificate status
+cert-status:
+    kubectl get certificate -n atuin
+
+# Describe certificate details
+cert-describe:
+    kubectl describe certificate -n atuin
+
+# Check certificate request status
+cert-request:
+    kubectl get certificaterequest -n atuin
+
+# Check ACME challenge status
+cert-challenge:
+    kubectl get challenge -n atuin
+
+# Describe challenge details
+cert-challenge-describe:
+    kubectl describe challenge -n atuin
+
+# Check ACME order status
+cert-order:
+    kubectl get order -n atuin
+
+# Describe order details
+cert-order-describe:
+    kubectl describe order -n atuin
+
+# View cert-manager logs for atuin
+cert-logs:
+    kubectl logs -n cert-manager -l app=cert-manager --tail=50 | grep -i atuin
+
+# Delete certificate to retry issuance
+cert-delete:
+    kubectl delete certificate -n atuin atuin-tls
+
+# Full cert status (all resources)
+cert-debug:
+    #!/usr/bin/env bash
+    echo "=== Certificate ==="
+    kubectl get certificate -n atuin
+    echo ""
+    echo "=== Challenge ==="
+    kubectl get challenge -n atuin
+    echo ""
+    echo "=== Order ==="
+    kubectl get order -n atuin
+    echo ""
+    echo "=== Recent cert-manager logs ==="
+    kubectl logs -n cert-manager -l app=cert-manager --tail=20 | grep -i atuin
