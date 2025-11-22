@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atuin
+  labels:
+    app: atuin
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: atuin
+  template:
+    metadata:
+      labels:
+        app: atuin
+    spec:
+      containers:
+      - name: atuin
+        image: ghcr.io/atuinsh/atuin:18.4.0
+        command: ["server", "start"]
+        ports:
+        - containerPort: 8888
+          name: http
+        env:
+        - name: ATUIN_HOST
+          value: "0.0.0.0"
+        - name: ATUIN_OPEN_REGISTRATION
+          value: "false"
+        - name: ATUIN_DB_URI
+          valueFrom:
+            secretKeyRef:
+              name: atuin-secrets
+              key: ATUIN_DB_URI
+        volumeMounts:
+        - name: atuin-config
+          mountPath: /config
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8888
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8888
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 2
+      volumes:
+      - name: atuin-config
+        emptyDir: {}
