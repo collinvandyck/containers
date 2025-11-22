@@ -19,10 +19,11 @@ spec:
       labels:
         app: atuin
     spec:
+      enableServiceLinks: false
       containers:
       - name: atuin
         image: ghcr.io/atuinsh/atuin:18.4.0
-        command: ["server", "start"]
+        args: ["server", "start"]
         ports:
         - containerPort: 8888
           name: http

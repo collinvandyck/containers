@@ -17,35 +17,37 @@ Atuin shell history sync server running on k3s.
 
 ## Secrets Setup
 
-Create required secrets in the `atuin` namespace:
+Set the postgres password in your environment (e.g., `.envrc`):
 
 ```bash
-# Create namespace
-kubectl create namespace atuin
-
-# Create postgres password secret
-kubectl create secret generic atuin-postgres-secrets \
-  --from-literal=POSTGRES_PASSWORD=<your-postgres-password> \
-  -n atuin
-
-# Create atuin database URI secret
-kubectl create secret generic atuin-secrets \
-  --from-literal=ATUIN_DB_URI=postgresql://atuin:<your-postgres-password>@postgres:5432/atuin \
-  -n atuin
+export ATUIN_POSTGRES_PASSWORD="your-secure-password"
 ```
+
+Then create secrets using justfile:
+
+```bash
+just create-secrets
+```
+
+This creates the namespace and both required secrets.
 
 ## Deployment
 
+From the `k8s/atuin` directory:
+
 ```bash
-# Deploy everything
-kubectl apply -k overlays/production
+# Full deployment (creates secrets and applies manifests)
+just deploy
+
+# Or step by step
+just create-secrets
+just apply
 
 # Check status
-kubectl get pods -n atuin
-kubectl get ingress -n atuin
+just status
 
 # View logs
-kubectl logs -n atuin -l app=atuin -f
+just logs
 ```
 
 ## Database Migration
@@ -53,18 +55,32 @@ kubectl logs -n atuin -l app=atuin -f
 To migrate data from docker-compose postgres:
 
 ```bash
-# Export from docker-compose
+# Export from docker-compose (on old VPS)
 docker-compose exec atuin-db pg_dump -U atuin atuin > atuin_backup.sql
 
-# Import to k8s
-kubectl exec -i postgres-0 -n atuin -- psql -U atuin atuin < atuin_backup.sql
+# Import to k8s (from this directory)
+just restore atuin_backup.sql
 ```
 
 ## Access
 
-- **Database**: `kubectl exec -it -n atuin postgres-0 -- psql -U atuin atuin`
-- **Server logs**: `kubectl logs -n atuin -l app=atuin -f`
+- **Database**: `just psql`
+- **Server logs**: `just logs`
+- **Postgres logs**: `just logs-postgres`
 - **Web UI**: https://atuin-new.5xx.engineer
+
+## Common Commands
+
+```bash
+just status              # Get pod status
+just logs                # View atuin server logs
+just psql                # Connect to database
+just get-all             # Get all resources
+just describe            # Describe atuin deployment
+just restart             # Restart deployment
+just backup              # Export database to atuin_backup.sql
+just restore <file>      # Import database from file
+```
 
 ## Switching to Final Domain
 

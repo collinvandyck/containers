@@ -20,7 +20,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: atuin
+            name: atuin-server
             port:
               number: 80
 ---

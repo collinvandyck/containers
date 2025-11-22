@@ -1,7 +1,7 @@
-# Kubernetes management for infrastructure workloads
+# Atuin K8s deployment management
 
 # Create all secrets for atuin deployment
-atuin-create-secrets:
+create-secrets:
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -17,60 +17,60 @@ atuin-create-secrets:
         --dry-run=client -o yaml | kubectl apply -f -
 
 # List secrets in atuin namespace
-atuin-list-secrets:
+list-secrets:
     kubectl get secrets -n atuin
 
 # Deploy atuin to k8s
-atuin-apply:
-    kubectl apply -k k8s/atuin/overlays/production
+apply:
+    kubectl apply -k overlays/production
 
 # Delete atuin deployment (keeps namespace and secrets)
-atuin-delete:
-    kubectl delete -k k8s/atuin/overlays/production --ignore-not-found=true
+delete:
+    kubectl delete -k overlays/production --ignore-not-found=true
 
 # Get atuin pod status
-atuin-status:
+status:
     kubectl get pods -n atuin
 
 # View atuin server logs
-atuin-logs:
+logs:
     kubectl logs -n atuin -l app=atuin -f
 
 # View postgres logs
-atuin-logs-postgres:
+logs-postgres:
     kubectl logs -n atuin -l app=postgres -f
 
 # Connect to atuin postgres database
-atuin-psql:
+psql:
     kubectl exec -it -n atuin postgres-0 -- psql -U atuin atuin
 
 # Restart atuin deployment
-atuin-restart:
+restart:
     kubectl rollout restart deployment/atuin -n atuin
 
 # Get all atuin resources
-atuin-get-all:
+get-all:
     kubectl get all,ingress,pvc -n atuin
 
 # Describe atuin deployment
-atuin-describe:
+describe:
     kubectl describe deployment/atuin -n atuin
 
 # Describe postgres statefulset
-atuin-describe-postgres:
+describe-postgres:
     kubectl describe statefulset/postgres -n atuin
 
 # Export postgres data to backup file
-atuin-backup file="atuin_backup.sql":
+backup file="atuin_backup.sql":
     kubectl exec -n atuin postgres-0 -- pg_dump -U atuin atuin > {{file}}
 
 # Import postgres data from backup file
-atuin-restore file="atuin_backup.sql":
+restore file="atuin_backup.sql":
     kubectl exec -i -n atuin postgres-0 -- psql -U atuin atuin < {{file}}
 
 # Full deployment: create secrets and apply manifests
-atuin-deploy: atuin-create-secrets atuin-apply
+deploy: create-secrets apply
 
 # Clean up everything including namespace (WARNING: deletes all data)
-atuin-clean:
+clean:
     kubectl delete namespace atuin --ignore-not-found=true
