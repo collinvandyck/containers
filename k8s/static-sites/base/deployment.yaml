@@ -19,6 +19,8 @@ spec:
       labels:
         app: static-sites
     spec:
+      imagePullSecrets:
+      - name: ghcr-secret
       containers:
       - name: static-sites
         image: ghcr.io/collinvandyck/static-sites:latest
