@@ -1,0 +1,130 @@
+# Resume ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: resume
+  namespace: static-sites
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    traefik.ingress.kubernetes.io/router.middlewares: static-sites-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - resume.5xx.engineer
+    secretName: resume-tls
+  rules:
+  - host: resume.5xx.engineer
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: static-sites
+            port:
+              number: 80
+---
+# Dotfiles ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dotfiles
+  namespace: static-sites
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    traefik.ingress.kubernetes.io/router.middlewares: static-sites-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - dotfiles.5xx.engineer
+    secretName: dotfiles-tls
+  rules:
+  - host: dotfiles.5xx.engineer
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: static-sites
+            port:
+              number: 80
+---
+# Boundaq ingress (apex domain)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: boundaq
+  namespace: static-sites
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    traefik.ingress.kubernetes.io/router.middlewares: static-sites-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - boundaq.com
+    secretName: boundaq-tls
+  rules:
+  - host: boundaq.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: static-sites
+            port:
+              number: 80
+---
+# Boundaq www redirect ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: boundaq-www-redirect
+  namespace: static-sites
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    traefik.ingress.kubernetes.io/router.middlewares: static-sites-https-redirect@kubernetescrd,static-sites-redirect-www-boundaq@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - www.boundaq.com
+    secretName: boundaq-www-tls
+  rules:
+  - host: www.boundaq.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: static-sites
+            port:
+              number: 80
+---
+# HTTPS redirect middleware
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: https-redirect
+  namespace: static-sites
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+# WWW to apex redirect for boundaq.com
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-www-boundaq
+  namespace: static-sites
+spec:
+  redirectRegex:
+    regex: "^https://www\\.boundaq\\.com/(.*)"
+    replacement: "https://boundaq.com/${1}"
+    permanent: true

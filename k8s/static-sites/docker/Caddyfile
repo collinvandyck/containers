@@ -1,0 +1,33 @@
+{
+	admin off
+}
+
+:8080 {
+	@boundaq host boundaq.com www.boundaq.com
+	handle @boundaq {
+		root * /srv/boundaq
+		file_server
+	}
+
+	@resume host resume.5xx.engineer
+	handle @resume {
+		root * /srv/resume
+		file_server {
+			index 5xx.engineer.html
+		}
+	}
+
+	@dotfiles host dotfiles.5xx.engineer
+	handle @dotfiles {
+		root * /srv/dotfiles
+		header Content-Type text/plain
+		file_server {
+			index install.sh
+		}
+	}
+
+	# Fallback - return 404 for unknown hosts
+	handle {
+		respond "Not Found" 404
+	}
+}
