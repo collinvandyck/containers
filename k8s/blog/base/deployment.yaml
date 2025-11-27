@@ -19,9 +19,11 @@ spec:
       labels:
         app: blog
     spec:
+      imagePullSecrets:
+      - name: ghcr-secret
       containers:
       - name: blog
-        image: collinvandyck/blog:latest
+        image: ghcr.io/collinvandyck/blog
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
