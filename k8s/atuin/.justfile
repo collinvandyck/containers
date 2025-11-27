@@ -1,5 +1,8 @@
 # Atuin K8s deployment management
 
+# VPS host for migration (old docker-compose deployment)
+vps_host := "root@5xx.engineer"
+
 # Create all secrets for atuin deployment
 create-secrets:
     #!/usr/bin/env bash
@@ -67,6 +70,77 @@ backup file="atuin_backup.sql":
 # Import postgres data from backup file
 restore file="atuin_backup.sql":
     kubectl exec -i -n atuin postgres-0 -- psql -U atuin atuin < {{file}}
+
+# ============================================================================
+# Migration from VPS docker-compose to k8s
+# ============================================================================
+
+# Dump atuin postgres from VPS docker-compose deployment
+vps-dump file="vps_atuin_backup.sql":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Dumping atuin database from VPS ({{vps_host}})..."
+    ssh {{vps_host}} "docker exec atuin-db pg_dump -U atuin atuin" > {{file}}
+    echo "Backup saved to {{file}} ($(wc -c < {{file}} | xargs) bytes)"
+
+# Migrate data from VPS to k8s (dump from VPS, restore to k8s)
+migrate:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    backup_file="vps_atuin_backup_$(date +%Y%m%d_%H%M%S).sql"
+
+    echo "=== Atuin Data Migration: VPS -> K8s ==="
+    echo ""
+
+    # Step 1: Dump from VPS
+    echo "Step 1: Dumping from VPS docker-compose postgres..."
+    ssh {{vps_host}} "docker exec atuin-db pg_dump -U atuin atuin" > "$backup_file"
+    echo "  Saved to $backup_file ($(wc -c < "$backup_file" | xargs) bytes)"
+    echo ""
+
+    # Step 2: Show what we're about to do
+    echo "Step 2: Preview - tables in backup:"
+    grep -E "^CREATE TABLE|^COPY" "$backup_file" | head -20
+    echo ""
+
+    # Step 3: Clear k8s database and restore
+    echo "Step 3: Restoring to k8s postgres..."
+    echo "  Dropping existing tables..."
+    kubectl exec -n atuin postgres-0 -- psql -U atuin atuin -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+    echo "  Importing data..."
+    kubectl exec -i -n atuin postgres-0 -- psql -U atuin atuin < "$backup_file"
+    echo ""
+
+    # Step 4: Verify
+    echo "Step 4: Verifying migration..."
+    echo "  Row counts:"
+    kubectl exec -n atuin postgres-0 -- psql -U atuin atuin -c "SELECT table_name, (xpath('/row/cnt/text()', xml_count))[1]::text::int as row_count FROM (SELECT table_name, query_to_xml(format('SELECT COUNT(*) as cnt FROM %I.%I', table_schema, table_name), false, true, '') as xml_count FROM information_schema.tables WHERE table_schema = 'public') t ORDER BY table_name;"
+    echo ""
+
+    echo "=== Migration complete ==="
+    echo "Backup file retained at: $backup_file"
+    echo ""
+    echo "Next steps:"
+    echo "  1. Restart atuin: just restart"
+    echo "  2. Test sync at https://atuin-new.5xx.engineer"
+
+# Show row counts in k8s postgres
+row-counts:
+    kubectl exec -n atuin postgres-0 -- psql -U atuin atuin -c "SELECT table_name, (xpath('/row/cnt/text()', xml_count))[1]::text::int as row_count FROM (SELECT table_name, query_to_xml(format('SELECT COUNT(*) as cnt FROM %I.%I', table_schema, table_name), false, true, '') as xml_count FROM information_schema.tables WHERE table_schema = 'public') t ORDER BY table_name;"
+
+# Show row counts in VPS postgres
+vps-row-counts:
+    ssh {{vps_host}} "docker exec atuin-db psql -U atuin atuin -c \"SELECT table_name, (xpath('/row/cnt/text()', xml_count))[1]::text::int as row_count FROM (SELECT table_name, query_to_xml(format('SELECT COUNT(*) as cnt FROM %I.%I', table_schema, table_name), false, true, '') as xml_count FROM information_schema.tables WHERE table_schema = 'public') t ORDER BY table_name;\""
+
+# Compare row counts between VPS and k8s
+compare:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "=== VPS (source) ==="
+    just vps-row-counts
+    echo ""
+    echo "=== K8s (target) ==="
+    just row-counts
 
 # Full deployment: create secrets and apply manifests
 deploy: create-secrets apply

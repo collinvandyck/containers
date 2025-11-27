@@ -10,10 +10,10 @@ spec:
   ingressClassName: traefik
   tls:
   - hosts:
-    - atuin-new.5xx.engineer
-    secretName: atuin-tls
+    - atuin.5xx.engineer
+    secretName: atuin-prod-tls
   rules:
-  - host: atuin-new.5xx.engineer
+  - host: atuin.5xx.engineer
     http:
       paths:
       - path: /
