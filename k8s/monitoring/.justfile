@@ -36,8 +36,9 @@ create-grafana-oauth-secret:
         --dry-run=client -o yaml | kubectl apply -f -
     echo "Created grafana-oauth-credentials secret"
 
-# Create all monitoring secrets
 # Requires: GRAFANA_ADMIN_PASSWORD, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+#
+# Create all monitoring secrets
 create-secrets: create-namespace create-grafana-admin-secret create-grafana-oauth-secret
     @echo "All monitoring secrets created"
 
@@ -51,8 +52,9 @@ add-repos:
     helm repo add grafana https://grafana.github.io/helm-charts || true
     helm repo update
 
-# Install kube-prometheus-stack
 # Requires: ALERTMANAGER_SMTP_USERNAME, ALERTMANAGER_SMTP_PASSWORD
+#
+# Install kube-prometheus-stack
 install-prometheus:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -93,9 +95,10 @@ deploy-dashboards:
         --overwrite
     echo "Deployed alertmanager-overview-dashboard"
 
-# Full monitoring stack installation
 # Requires all environment variables: GRAFANA_ADMIN_PASSWORD, GOOGLE_CLIENT_ID,
 # GOOGLE_CLIENT_SECRET, ALERTMANAGER_SMTP_USERNAME, ALERTMANAGER_SMTP_PASSWORD
+#
+# Full monitoring stack installation
 install: create-secrets add-repos install-prometheus install-loki deploy-ingress deploy-dashboards
     @echo "Monitoring stack installation complete!"
     @echo "Grafana will be available at https://grafana.5xx.engineer once DNS is configured"
