@@ -1,0 +1,85 @@
+# PrometheusRule Template
+# Copy this to your application's k8s/monitoring/ directory and customize
+#
+# Replace:
+#   - APPNAME: your application name (e.g., "myapp")
+#   - NAMESPACE: your application's namespace
+#
+# Deploy with: kubectl apply -f alerts.yaml
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: APPNAME-alerts
+  namespace: monitoring
+  labels:
+    # Required: Prometheus discovers rules with these labels
+    prometheus: kube-prometheus-stack-prometheus
+    release: kube-prometheus-stack
+    app: APPNAME
+    role: alert-rules
+spec:
+  groups:
+  # Application-level alerts
+  - name: APPNAME.application
+    interval: 30s
+    rules:
+    # Example: High HTTP error rate
+    - alert: APPNAMEHighHTTPErrorRate
+      annotations:
+        summary: "High HTTP 5xx error rate"
+        description: "HTTP 5xx error rate is {{ $value | humanizePercentage }} (>5%) in namespace {{ $labels.namespace }}"
+      expr: |
+        (
+          sum(rate(http_requests_total{namespace="NAMESPACE",status=~"5.."}[5m]))
+          /
+          sum(rate(http_requests_total{namespace="NAMESPACE"}[5m]))
+        ) > 0.05
+      for: 5m
+      labels:
+        severity: warning
+        component: http
+
+  # Infrastructure-level alerts
+  - name: APPNAME.infrastructure
+    interval: 30s
+    rules:
+    # Pod not running
+    - alert: APPNAMEPodDown
+      annotations:
+        summary: "APPNAME pod is down"
+        description: "Pod {{ $labels.pod }} is not running in namespace {{ $labels.namespace }}"
+      expr: |
+        kube_pod_status_phase{namespace="NAMESPACE",pod=~"APPNAME-.*",phase!="Running"} == 1
+      for: 2m
+      labels:
+        severity: critical
+        component: infrastructure
+
+    # Pod restarting frequently
+    - alert: APPNAMEPodRestarting
+      annotations:
+        summary: "APPNAME pod is restarting frequently"
+        description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes"
+      expr: |
+        rate(kube_pod_container_status_restarts_total{namespace="NAMESPACE",pod=~"APPNAME-.*"}[15m]) > 0
+      for: 5m
+      labels:
+        severity: warning
+        component: infrastructure
+
+    # High memory usage
+    - alert: APPNAMEHighMemoryUsage
+      annotations:
+        summary: "APPNAME pod using high memory"
+        description: "Pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of memory limit"
+      expr: |
+        (
+          container_memory_working_set_bytes{namespace="NAMESPACE",pod=~"APPNAME-.*",container!=""}
+          /
+          container_spec_memory_limit_bytes{namespace="NAMESPACE",pod=~"APPNAME-.*",container!=""}
+        ) > 0.85
+      for: 5m
+      labels:
+        severity: warning
+        component: infrastructure

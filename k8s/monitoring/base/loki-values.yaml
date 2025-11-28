@@ -1,0 +1,190 @@
+# Helm values for loki-stack
+# Reference: https://github.com/grafana/helm-charts/tree/main/charts/loki-stack
+
+# Loki configuration
+loki:
+  enabled: true
+  isDefault: false  # Prometheus is the default datasource
+
+  # Persistence for logs
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClassName: local-path  # k3s default storage class
+
+  # Resource limits for Loki
+  resources:
+    limits:
+      cpu: 200m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  # Loki configuration
+  config:
+    auth_enabled: false
+
+    # Ingester configuration
+    ingester:
+      chunk_idle_period: 3m
+      chunk_block_size: 262144
+      chunk_retain_period: 1m
+      max_transfer_retries: 0
+      lifecycler:
+        ring:
+          kvstore:
+            store: inmemory
+          replication_factor: 1
+
+    # Limits configuration
+    limits_config:
+      enforce_metric_name: false
+      reject_old_samples: true
+      reject_old_samples_max_age: 168h  # 7 days
+      ingestion_rate_mb: 10
+      ingestion_burst_size_mb: 20
+
+    # Schema configuration
+    schema_config:
+      configs:
+      - from: 2020-10-24
+        store: boltdb-shipper
+        object_store: filesystem
+        schema: v11
+        index:
+          prefix: index_
+          period: 24h
+
+    # Server configuration
+    server:
+      http_listen_port: 3100
+
+    # Storage configuration
+    storage_config:
+      boltdb_shipper:
+        active_index_directory: /data/loki/boltdb-shipper-active
+        cache_location: /data/loki/boltdb-shipper-cache
+        cache_ttl: 24h
+        shared_store: filesystem
+      filesystem:
+        directory: /data/loki/chunks
+
+    # Chunk store configuration
+    chunk_store_config:
+      max_look_back_period: 168h  # 7 days retention
+
+    # Table manager configuration
+    table_manager:
+      retention_deletes_enabled: true
+      retention_period: 168h  # 7 days retention
+
+    # Compactor configuration
+    compactor:
+      working_directory: /data/loki/boltdb-shipper-compactor
+      shared_store: filesystem
+
+# Promtail configuration - ships logs from all pods
+promtail:
+  enabled: true
+
+  # Resource limits for Promtail
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+  # Promtail configuration
+  config:
+    # Server configuration
+    server:
+      http_listen_port: 3101
+
+    # Clients - where to send logs
+    clients:
+    - url: http://{{ .Release.Name }}:3100/loki/api/v1/push
+
+    # Positions - track which logs have been sent
+    positions:
+      filename: /run/promtail/positions.yaml
+
+    # Scrape configs - collect logs from pods
+    scrape_configs:
+    # Pod logs
+    - job_name: kubernetes-pods
+      pipeline_stages:
+      - cri: {}
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      # Add namespace label
+      - source_labels:
+        - __meta_kubernetes_pod_namespace
+        target_label: namespace
+      # Add pod name label
+      - source_labels:
+        - __meta_kubernetes_pod_name
+        target_label: pod
+      # Add container name label
+      - source_labels:
+        - __meta_kubernetes_pod_container_name
+        target_label: container
+      # Add app label
+      - source_labels:
+        - __meta_kubernetes_pod_label_app
+        target_label: app
+      # Add node name label
+      - source_labels:
+        - __meta_kubernetes_pod_node_name
+        target_label: node_name
+      # Use pod UID as path
+      - source_labels:
+        - __meta_kubernetes_pod_uid
+        - __meta_kubernetes_pod_container_name
+        target_label: __path__
+        separator: /
+        replacement: /var/log/pods/*$1/*.log
+
+    # Container logs
+    - job_name: kubernetes-pods-container
+      pipeline_stages:
+      - cri: {}
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      - source_labels:
+        - __meta_kubernetes_pod_namespace
+        target_label: namespace
+      - source_labels:
+        - __meta_kubernetes_pod_name
+        target_label: pod_name
+      - source_labels:
+        - __meta_kubernetes_pod_container_name
+        target_label: container_name
+      - source_labels:
+        - __meta_kubernetes_pod_uid
+        - __meta_kubernetes_pod_container_name
+        target_label: __path__
+        separator: /
+        replacement: /var/log/pods/*$1/*.log
+
+  # ServiceMonitor for Promtail metrics (requires prometheus-operator)
+  serviceMonitor:
+    enabled: true
+    labels:
+      release: kube-prometheus-stack
+
+# Fluent Bit - alternative log shipper (disabled, using Promtail)
+fluent-bit:
+  enabled: false
+
+# Grafana - disabled here as it's enabled in kube-prometheus-stack
+grafana:
+  enabled: false
+
+# Prometheus - disabled here as it's enabled in kube-prometheus-stack
+prometheus:
+  enabled: false

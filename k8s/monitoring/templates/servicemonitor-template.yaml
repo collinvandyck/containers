@@ -1,0 +1,27 @@
+# ServiceMonitor Template
+# Copy this to your application's k8s/base/ directory and customize
+#
+# Replace:
+#   - APPNAME: your application name (e.g., "myapp")
+#   - PORT_NAME: the port name from your Service (e.g., "http")
+#   - METRICS_PATH: path to metrics endpoint (usually "/metrics")
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: APPNAME
+  labels:
+    app: APPNAME
+    # Required: Prometheus discovers ServiceMonitors with this label
+    release: kube-prometheus-stack
+spec:
+  # Selector must match your Service's pod selector labels
+  selector:
+    matchLabels:
+      app: APPNAME
+  endpoints:
+  - port: PORT_NAME        # Must match a named port in your Service
+    path: METRICS_PATH     # Usually /metrics
+    interval: 30s          # How often to scrape
+    # Optional: scrape timeout (must be less than interval)
+    # scrapeTimeout: 10s

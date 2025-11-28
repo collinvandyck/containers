@@ -1,0 +1,24 @@
+# Production-specific overrides for kube-prometheus-stack
+# This file is merged with base/prometheus-values.yaml during helm install
+#
+# To use: helm upgrade --install ... \
+#   --values k8s/monitoring/base/prometheus-values.yaml \
+#   --values k8s/monitoring/overlays/production/patches/prometheus-values-patch.yaml
+
+grafana:
+  grafana.ini:
+    server:
+      # Public URL for Grafana (used for OAuth redirects)
+      root_url: https://grafana.5xx.engineer
+
+    auth.google:
+      # Restrict OAuth login to specific email(s)
+      # Comma-separated for multiple: "user1@example.com,user2@example.com"
+      allowed_emails: collinvandyck@gmail.com
+
+# AlertManager production settings
+alertmanager:
+  smtp:
+    from: "alerts@5xx.engineer"
+    to: "collinvandyck@gmail.com"
+  subjectPrefix: "[5xx.engineer]"

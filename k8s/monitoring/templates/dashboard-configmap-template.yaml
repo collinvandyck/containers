@@ -1,0 +1,57 @@
+# Dashboard ConfigMap Template
+#
+# Option 1: Create from JSON file
+#   kubectl create configmap APPNAME-dashboard \
+#     --namespace monitoring \
+#     --from-file=APPNAME.json=path/to/dashboard.json \
+#     --dry-run=client -o yaml | kubectl apply -f -
+#   kubectl label configmap APPNAME-dashboard -n monitoring grafana_dashboard=1
+#
+# Option 2: Use this template with embedded JSON
+#   Replace APPNAME and add your dashboard JSON below
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: APPNAME-dashboard
+  namespace: monitoring
+  labels:
+    # Required: Grafana sidecar discovers ConfigMaps with this label
+    grafana_dashboard: "1"
+    app: APPNAME
+data:
+  # The key name becomes the dashboard filename in Grafana
+  APPNAME-dashboard.json: |
+    {
+      "title": "APPNAME Dashboard",
+      "uid": "APPNAME-overview",
+      "tags": ["APPNAME"],
+      "timezone": "browser",
+      "refresh": "30s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "title": "Requests per Second",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{namespace=\"NAMESPACE\"}[5m]))",
+              "legendFormat": "Requests/s"
+            }
+          ]
+        }
+      ],
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "constant",
+            "current": { "value": "NAMESPACE" }
+          }
+        ]
+      }
+    }

@@ -1,0 +1,308 @@
+# Helm values for kube-prometheus-stack
+# Reference: https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
+#
+# This is the BASE configuration with sensible defaults.
+# Environment-specific values (URLs, emails, OAuth) should be set in overlays.
+
+# Global settings
+nameOverride: ""
+fullnameOverride: ""
+
+# Prometheus Operator configuration
+prometheusOperator:
+  enabled: true
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# Prometheus server configuration
+prometheus:
+  enabled: true
+  prometheusSpec:
+    # Retention period for metrics
+    retention: 90d
+    retentionSize: "25GB"
+
+    # Resource limits for Prometheus
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+
+    # Storage configuration
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 30Gi
+
+    # ServiceMonitor selector - scan all namespaces
+    # This allows apps in any namespace to be discovered
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+
+    # PodMonitor selector - scan all namespaces
+    podMonitorSelector: {}
+    podMonitorNamespaceSelector: {}
+
+    # Enable admin API for advanced operations
+    enableAdminAPI: false
+
+    # Scrape interval
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+
+# Grafana configuration
+grafana:
+  enabled: true
+  admin:
+    existingSecret: grafana-admin-credentials
+    userKey: admin-user
+    passwordKey: admin-password
+
+  # Disable init container that tries to chown existing PVC data
+  initChownData:
+    enabled: false
+
+  # Environment variables from secrets (for OAuth)
+  envFromSecret: grafana-oauth-credentials
+
+  # Grafana configuration file
+  # NOTE: server.root_url and auth.google settings should be overridden in production overlay
+  grafana.ini:
+    server:
+      root_url: "%(protocol)s://%(domain)s:%(http_port)s/"
+
+    # Google OAuth configuration - override allowed_emails in production
+    auth.google:
+      enabled: true
+      client_id: $__env{GOOGLE_CLIENT_ID}
+      client_secret: $__env{GOOGLE_CLIENT_SECRET}
+      scopes: openid email profile
+      auth_url: https://accounts.google.com/o/oauth2/auth
+      token_url: https://accounts.google.com/o/oauth2/token
+      api_url: https://www.googleapis.com/oauth2/v1/userinfo
+      allowed_emails: ""  # Override in production overlay
+      allow_sign_up: true
+      role_attribute_path: "'Admin'"
+
+    # Disable anonymous access
+    auth.anonymous:
+      enabled: false
+
+    # Disable basic auth login form (OAuth only)
+    auth.basic:
+      enabled: false
+
+    # Disable user signup via UI
+    users:
+      allow_sign_up: false
+      auto_assign_org: true
+      auto_assign_org_role: Admin
+
+  # Resource limits for Grafana
+  resources:
+    limits:
+      cpu: 200m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  # Persistence for Grafana dashboards and config
+  persistence:
+    enabled: true
+    size: 2Gi
+
+  # Sidecar for auto-loading dashboards and datasources from ConfigMaps
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: ALL
+    datasources:
+      enabled: true
+      label: grafana_datasource
+      labelValue: "1"
+
+# AlertManager configuration
+alertmanager:
+  enabled: true
+
+  # Template the config to inject SMTP credentials from environment
+  tplConfig: true
+  stringConfig: |-
+    global:
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: '{{ .Values.alertmanager.smtp.from }}'
+      smtp_auth_username: '{{ .Values.alertmanager.smtp.username }}'
+      smtp_auth_password: '{{ .Values.alertmanager.smtp.password }}'
+      smtp_require_tls: true
+    route:
+      receiver: 'email-notifications'
+      group_by: ['namespace', 'alertname', 'severity']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      routes:
+      # Drop noisy k8s component alerts that don't work with k3s
+      - match_re:
+          alertname: '(KubeSchedulerDown|KubeControllerManagerDown|KubeProxyDown)'
+        receiver: 'null'
+        continue: false
+      # Drop meta-alerts (Watchdog, InfoInhibitor)
+      - match_re:
+          alertname: '(Watchdog|InfoInhibitor)'
+        receiver: 'null'
+        continue: false
+      - match:
+          severity: critical
+        receiver: 'email-critical'
+        repeat_interval: 4h
+        continue: false
+      - match:
+          severity: warning
+        receiver: 'email-notifications'
+        repeat_interval: 12h
+        continue: false
+      - match:
+          severity: info
+        receiver: 'email-info'
+        repeat_interval: 24h
+        continue: false
+    inhibit_rules:
+    - source_match:
+        severity: 'critical'
+      target_match:
+        severity: 'warning'
+      equal: ['alertname', 'namespace', 'pod']
+    - source_match:
+        alertname: 'NodeDown'
+      target_match_re:
+        alertname: '(Pod.*|Container.*)'
+      equal: ['node']
+    receivers:
+    - name: 'null'
+      # Drop alerts silently without sending any notifications
+    - name: 'email-critical'
+      email_configs:
+      - to: '{{ .Values.alertmanager.smtp.to }}'
+        headers:
+          Subject: '{{ .Values.alertmanager.subjectPrefix }} [CRITICAL] {{`{{ .GroupLabels.alertname }}`}}'
+        html: |
+          <html><body>
+          <h2 style="color: #dc3545;">CRITICAL ALERT</h2>
+          <div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; margin: 10px 0; border-radius: 4px;">
+            <h3>{{`{{ .GroupLabels.alertname }}`}}</h3>
+            <p><strong>Namespace:</strong> {{`{{ .GroupLabels.namespace }}`}}</p>
+            <p><strong>Severity:</strong> {{`{{ .GroupLabels.severity }}`}}</p>
+          </div>
+          {{`{{ range .Alerts }}`}}
+          <div style="background: #e9ecef; padding: 10px; margin: 10px 0; border-radius: 4px;">
+            <h4>{{`{{ .Annotations.summary }}`}}</h4>
+            <p>{{`{{ .Annotations.description }}`}}</p>
+            <p><strong>Started:</strong> {{`{{ .StartsAt }}`}}</p>
+            {{`{{ if .Labels.pod }}`}}<p><strong>Pod:</strong> {{`{{ .Labels.pod }}`}}</p>{{`{{ end }}`}}
+          </div>
+          {{`{{ end }}`}}
+          </body></html>
+    - name: 'email-notifications'
+      email_configs:
+      - to: '{{ .Values.alertmanager.smtp.to }}'
+        headers:
+          Subject: '{{ .Values.alertmanager.subjectPrefix }} [WARNING] {{`{{ .GroupLabels.alertname }}`}}'
+        html: |
+          <html><body>
+          <h2 style="color: #856404;">WARNING ALERT</h2>
+          <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 10px 0; border-radius: 4px;">
+            <h3>{{`{{ .GroupLabels.alertname }}`}}</h3>
+            <p><strong>Namespace:</strong> {{`{{ .GroupLabels.namespace }}`}}</p>
+            <p><strong>Severity:</strong> {{`{{ .GroupLabels.severity }}`}}</p>
+          </div>
+          {{`{{ range .Alerts }}`}}
+          <div style="background: #e9ecef; padding: 10px; margin: 10px 0; border-radius: 4px;">
+            <h4>{{`{{ .Annotations.summary }}`}}</h4>
+            <p>{{`{{ .Annotations.description }}`}}</p>
+            <p><strong>Started:</strong> {{`{{ .StartsAt }}`}}</p>
+            {{`{{ if .Labels.pod }}`}}<p><strong>Pod:</strong> {{`{{ .Labels.pod }}`}}</p>{{`{{ end }}`}}
+          </div>
+          {{`{{ end }}`}}
+          </body></html>
+    - name: 'email-info'
+      email_configs:
+      - to: '{{ .Values.alertmanager.smtp.to }}'
+        headers:
+          Subject: '{{ .Values.alertmanager.subjectPrefix }} [INFO] {{`{{ .GroupLabels.alertname }}`}}'
+
+  # SMTP configuration - set via --set during helm install
+  smtp:
+    from: ""      # e.g., alerts@example.com
+    username: ""  # SMTP username
+    password: ""  # SMTP password (app password for Gmail)
+    to: ""        # Alert recipient email
+
+  # Subject line prefix for alert emails
+  subjectPrefix: "[K8s]"
+
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+
+# Node Exporter - collect node metrics
+nodeExporter:
+  enabled: true
+
+# Kube State Metrics - collect Kubernetes object metrics
+kubeStateMetrics:
+  enabled: true
+
+# Default rules and alerts
+# Tuned for k3s - disable components that aren't exposed
+defaultRules:
+  create: true
+  rules:
+    alertmanager: true
+    etcd: false  # k3s doesn't expose etcd metrics by default
+    configReloaders: true
+    general: true
+    k8s: true
+    kubeApiserverAvailability: true
+    kubeApiserverSlos: true
+    kubelet: true
+    kubeProxy: false  # Often not available in k3s
+    kubePrometheusGeneral: true
+    kubePrometheusNodeRecording: true
+    kubernetesApps: true
+    kubernetesResources: true
+    kubernetesStorage: true
+    kubernetesSystem: true
+    kubeScheduler: false  # Often not available in k3s
+    kubeStateMetrics: true
+    network: true
+    node: true
+    nodeExporterAlerting: true
+    nodeExporterRecording: true
+    prometheus: true
+    prometheusOperator: true
