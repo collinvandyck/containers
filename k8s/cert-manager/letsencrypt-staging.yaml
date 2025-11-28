@@ -1,0 +1,21 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    # Let's Encrypt staging server (for testing)
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+
+    # Your email (for expiration notifications)
+    email: collinvandyck@gmail.com
+
+    # Secret to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-staging
+
+    # Use HTTP-01 challenge via Traefik ingress
+    solvers:
+    - http01:
+        ingress:
+          class: traefik
