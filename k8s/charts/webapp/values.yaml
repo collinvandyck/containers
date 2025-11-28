@@ -65,7 +65,9 @@ persistence: []
 # Ingress configuration
 ingress:
   enabled: false
-  host: ""
+  hosts: []
+  # - rss.5xx.engineer
+  # - freshrss.5xx.engineer
   tls: true
   clusterIssuer: letsencrypt-prod
   ingressClassName: traefik

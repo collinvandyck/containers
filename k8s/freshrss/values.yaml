@@ -27,4 +27,5 @@ persistence:
 
 ingress:
   enabled: true
-  host: rss.5xx.engineer
+  hosts:
+    - rss.5xx.engineer
