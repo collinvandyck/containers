@@ -1,0 +1,30 @@
+name: freshrss
+
+image:
+  repository: freshrss/freshrss
+  tag: latest
+  pullPolicy: Always
+
+env:
+  TZ: America/New_York
+  CRON_MIN: "3,33"
+
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "50m"
+  limits:
+    memory: "256Mi"
+    cpu: "500m"
+
+persistence:
+  - name: data
+    mountPath: /var/www/FreshRSS/data
+    size: 1Gi
+  - name: extensions
+    mountPath: /var/www/FreshRSS/extensions
+    size: 500Mi
+
+ingress:
+  enabled: true
+  host: freshrss.5xx.engineer

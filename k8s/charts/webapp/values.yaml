@@ -1,0 +1,71 @@
+# Default values for webapp chart
+
+name: myapp
+
+image:
+  repository: nginx
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Optional: image pull secrets for private registries
+imagePullSecrets: []
+# - name: ghcr-secret
+
+replicas: 1
+
+# Container port the app listens on
+port: 80
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Environment variables
+env: {}
+# TZ: America/New_York
+# MY_VAR: value
+
+# Environment variables from secrets
+envFromSecret: {}
+# SECRET_NAME:
+#   - SECRET_KEY
+
+# Resource limits
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "50m"
+  limits:
+    memory: "128Mi"
+    cpu: "200m"
+
+# Health checks
+probes:
+  enabled: true
+  path: /
+  liveness:
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 2
+
+# Persistent volumes
+persistence: []
+# - name: data
+#   mountPath: /data
+#   size: 1Gi
+#   storageClass: ""  # empty = default
+
+# Ingress configuration
+ingress:
+  enabled: false
+  host: ""
+  tls: true
+  clusterIssuer: letsencrypt-prod
+  ingressClassName: traefik
