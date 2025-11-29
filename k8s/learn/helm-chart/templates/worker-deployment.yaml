@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-worker
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: worker
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  selector:
+    matchLabels:
+      app: worker
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: worker
+        release: {{ .Release.Name }}
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+      - name: worker
+        image: "{{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}"
+        imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+        ports:
+        - name: metrics
+          containerPort: {{ .Values.worker.metricsPort }}
+          protocol: TCP
+        env:
+        - name: REDIS_ADDR
+          value: "{{ .Values.worker.env.REDIS_ADDR }}"
+        - name: QUEUE_NAME
+          value: "{{ .Values.worker.env.QUEUE_NAME }}"
+        - name: METRICS_PORT
+          value: "{{ .Values.worker.metricsPort }}"
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: metrics
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: metrics
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 2
+        resources:
+          requests:
+            cpu: {{ .Values.worker.resources.requests.cpu }}
+            memory: {{ .Values.worker.resources.requests.memory }}
+          limits:
+            cpu: {{ .Values.worker.resources.limits.cpu }}
+            memory: {{ .Values.worker.resources.limits.memory }}
