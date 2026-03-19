@@ -12,7 +12,7 @@
 
 ---
 
-## Milestone 1: Scaffold and Base Manifests
+## Milestone 1: Scaffold and Base Manifests ✅
 
 Get the directory structure and core Kustomize base in place. No secrets, no overlays yet — just the skeleton that everything else builds on.
 
@@ -419,134 +419,9 @@ git commit -m "feat(openclaw): add base kustomization"
 
 ---
 
-## Milestone 2: Environment Overlays
+## ~~Milestone 2: Environment Overlays~~ — REMOVED
 
-Add the staging and production overlays that scope which Slack channels dopeclaw listens to.
-
-### Task 7: Write the staging overlay
-
-**Files:**
-- Create: `k8s/openclaw/overlays/staging/kustomization.yaml`
-- Create: `k8s/openclaw/overlays/staging/namespace.yaml`
-- Create: `k8s/openclaw/overlays/staging/channels-patch.yaml`
-
-- [ ] **Step 1: Write staging namespace.yaml**
-
-Following the atuin pattern — namespace lives in the overlay, not the base.
-
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: openclaw
-```
-
-- [ ] **Step 2: Write staging kustomization.yaml**
-
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-namespace: openclaw
-
-resources:
-  - ../../base
-  - namespace.yaml
-
-patches:
-  - path: channels-patch.yaml
-```
-
-- [ ] **Step 3: Write staging channels-patch.yaml**
-
-Strategic merge patch that restricts Slack to `#dopeclaw-test` only.
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: openclaw-config
-data:
-  config.yaml: |
-    llm:
-      provider: openrouter
-      model: anthropic/claude-sonnet-4
-
-    channels:
-      slack:
-        enabled: true
-        mode: socket
-        requireMention: true
-        mentionPatterns:
-          - "dopeclaw"
-        channels:
-          - "#dopeclaw-test"
-
-    agents:
-      defaults:
-        sandbox:
-          workspaceAccess: rw
-```
-
-- [ ] **Step 4: Validate staging renders**
-
-```bash
-kubectl kustomize k8s/openclaw/overlays/staging/
-```
-
-Expected: All manifests render with `namespace: openclaw` and the staging channel config.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add k8s/openclaw/overlays/staging/
-git commit -m "feat(openclaw): add staging overlay (dopeclaw-test channel only)"
-```
-
-### Task 8: Write the production overlay
-
-**Files:**
-- Create: `k8s/openclaw/overlays/production/kustomization.yaml`
-- Create: `k8s/openclaw/overlays/production/namespace.yaml`
-
-Production uses the base config as-is (no channel allowlist = listen everywhere). No patch needed — the only difference from staging is the absence of the channel restriction.
-
-- [ ] **Step 1: Write production namespace.yaml**
-
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: openclaw
-```
-
-- [ ] **Step 2: Write production kustomization.yaml**
-
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-namespace: openclaw
-
-resources:
-  - ../../base
-  - namespace.yaml
-```
-
-- [ ] **Step 3: Validate production renders**
-
-```bash
-kubectl kustomize k8s/openclaw/overlays/production/
-```
-
-Expected: All manifests render with `namespace: openclaw` and unrestricted channel config (base config, no patch).
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add k8s/openclaw/overlays/production/
-git commit -m "feat(openclaw): add production overlay (all channels)"
-```
+Simplified to a single deployment (no staging/production overlays). A staging environment would require a separate Slack app to avoid Socket Mode event round-robin — not worth the complexity. If the prompt is bad, `just update-prompt` and move on.
 
 ---
 
@@ -626,11 +501,11 @@ In Slack, create a `#dopeclaw-test` channel for staging use. Invite `@dopeclaw` 
 
 ---
 
-## Milestone 4: First Deploy (Staging)
+## Milestone 4: First Deploy
 
-Create the secrets and deploy to staging. Verify dopeclaw comes up and responds in `#dopeclaw-test`.
+Create the secrets, deploy dopeclaw, and verify it works in Slack.
 
-### Task 11: Create secrets and deploy staging
+### Task 11: Create secrets and deploy
 
 - [ ] **Step 1: Verify env vars are loaded**
 
@@ -642,22 +517,15 @@ echo "Slack App: ${SLACK_APP_TOKEN:0:10}..."
 
 All three should show the first 10 characters of their respective tokens.
 
-- [ ] **Step 2: Create namespace and secrets**
+- [ ] **Step 2: Create secrets and deploy**
 
 From `k8s/openclaw/`:
 
 ```bash
-just create-namespace
-just create-secrets
+just full-deploy
 ```
 
-- [ ] **Step 3: Deploy staging**
-
-```bash
-just deploy staging
-```
-
-- [ ] **Step 4: Verify pod is running**
+- [ ] **Step 3: Verify pod is running**
 
 ```bash
 just status
@@ -665,7 +533,7 @@ just status
 
 Expected: One pod in `Running` state.
 
-- [ ] **Step 5: Check logs**
+- [ ] **Step 4: Check logs**
 
 ```bash
 just logs
@@ -673,9 +541,13 @@ just logs
 
 Expected: OpenClaw gateway starts, connects to Slack via Socket Mode. Look for connection success messages and no errors.
 
+- [ ] **Step 5: Invite dopeclaw to channels**
+
+In Slack, invite `@dopeclaw` to any channels where you want it active. It only responds to mentions, so it won't be noisy.
+
 - [ ] **Step 6: Test in Slack**
 
-Go to `#dopeclaw-test` in Slack. Send: `@dopeclaw hey, you alive?`
+Mention `@dopeclaw` in a channel. Send: `@dopeclaw hey, you alive?`
 
 Expected: dopeclaw responds with something warm and dry.
 
@@ -699,50 +571,13 @@ After it comes back up, send: `@dopeclaw what's in hello.txt?`
 
 Expected: dopeclaw reads the file and confirms the content persisted.
 
----
-
-## Milestone 5: Production Deploy
-
-Once staging is validated, deploy to production and invite dopeclaw to the channels you want it in.
-
-### Task 12: Deploy production
-
-- [ ] **Step 1: Scale down staging** (staging and production cannot run simultaneously)
-
-```bash
-just delete staging
-```
-
-- [ ] **Step 2: Deploy production**
-
-```bash
-just deploy production
-```
-
-- [ ] **Step 3: Verify pod is running**
-
-```bash
-just status
-just logs
-```
-
-Expected: Running, connected to Slack.
-
-- [ ] **Step 4: Invite dopeclaw to channels**
-
-In Slack, invite `@dopeclaw` to any channels where you want it active. It only responds to mentions, so it won't be noisy.
-
-- [ ] **Step 5: Smoke test in a real channel**
-
-Mention `@dopeclaw` in one of the channels. Verify it responds.
-
-- [ ] **Step 6: Commit any final adjustments**
+- [ ] **Step 9: Commit any final adjustments**
 
 If you tweaked the system prompt, resource limits, or config during testing, commit the changes.
 
 ---
 
-## Milestone 6: Observability
+## Milestone 5: Observability
 
 Wire up metrics and cost visibility. This can happen after dopeclaw is running — it's additive.
 

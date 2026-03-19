@@ -21,23 +21,16 @@ k8s/openclaw/
 ├── .justfile
 ├── base/
 │   ├── kustomization.yaml
+│   ├── namespace.yaml
 │   ├── deployment.yaml
 │   ├── pvc.yaml
 │   ├── service.yaml              # metrics-only (port 18789 for Prometheus)
 │   ├── servicemonitor.yaml       # Prometheus scrape config
 │   ├── configmap.yaml
 │   └── system-prompt.yaml
-├── overlays/
-│   ├── staging/
-│   │   ├── kustomization.yaml
-│   │   ├── namespace.yaml
-│   │   └── channels-patch.yaml
-│   └── production/
-│       ├── kustomization.yaml
-│       └── namespace.yaml
 ```
 
-Note: Namespace lives in the overlays (not base), matching the atuin convention. Production has no channels-patch — the base config is already unrestricted.
+Single deployment — no staging/production overlays. A staging environment would require a separate Slack app (Socket Mode round-robins events between connected clients). The blast radius is low enough that `just update-prompt` is sufficient for iterating.
 
 ## Components
 
@@ -96,17 +89,6 @@ Cluster is underutilized, so these are liberal. OpenClaw + Chromium (for web bro
 - `message.im`
 
 **Slack app creation is a manual prerequisite** — the spec includes a step-by-step walkthrough.
-
-### Environment Overlays
-
-| Overlay    | Channel Scope                              |
-|------------|--------------------------------------------|
-| Staging    | `#dopeclaw-test` only                      |
-| Production | All channels dopeclaw is invited to + DMs  |
-
-Same Slack app, same bot — just different channel allowlists patched via Kustomize overlays.
-
-**Important:** Staging and production must not run simultaneously with the same Slack app tokens. Socket Mode will round-robin events between connected clients, causing nondeterministic message routing. For local testing, use the staging overlay and scale down production first. If simultaneous environments are ever needed, create a second Slack app.
 
 ### Configuration (ConfigMaps)
 
