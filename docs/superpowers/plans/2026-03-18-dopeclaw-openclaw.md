@@ -425,7 +425,7 @@ Simplified to a single deployment (no staging/production overlays). A staging en
 
 ---
 
-## Milestone 3: External Account Setup (Manual, Guided)
+## Milestone 3: External Account Setup (Manual, Guided) ✅
 
 These are manual steps that require the user to create accounts and generate tokens. The plan walks through each one.
 

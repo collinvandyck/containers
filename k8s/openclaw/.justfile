@@ -1,29 +1,29 @@
 # OpenClaw (dopeclaw) K8s deployment management
 
 # Create secrets for openclaw deployment
-# Requires OPENROUTER_API_KEY, SLACK_BOT_TOKEN, SLACK_APP_TOKEN environment variables
+# Requires DOPECLAW_OPENROUTER_API_KEY, DOPECLAW_SLACK_BOT_TOKEN, DOPECLAW_SLACK_APP_TOKEN environment variables
 create-secrets:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ -z "${OPENROUTER_API_KEY:-}" ]; then
-        echo "Error: OPENROUTER_API_KEY environment variable is required"
+    if [ -z "${DOPECLAW_OPENROUTER_API_KEY:-}" ]; then
+        echo "Error: DOPECLAW_OPENROUTER_API_KEY environment variable is required"
         exit 1
     fi
-    if [ -z "${SLACK_BOT_TOKEN:-}" ]; then
-        echo "Error: SLACK_BOT_TOKEN environment variable is required"
+    if [ -z "${DOPECLAW_SLACK_BOT_TOKEN:-}" ]; then
+        echo "Error: DOPECLAW_SLACK_BOT_TOKEN environment variable is required"
         exit 1
     fi
-    if [ -z "${SLACK_APP_TOKEN:-}" ]; then
-        echo "Error: SLACK_APP_TOKEN environment variable is required"
+    if [ -z "${DOPECLAW_SLACK_APP_TOKEN:-}" ]; then
+        echo "Error: DOPECLAW_SLACK_APP_TOKEN environment variable is required"
         exit 1
     fi
     kubectl create namespace openclaw --dry-run=client -o yaml \
         | kubectl apply -f -
     kubectl create secret generic openclaw-secrets \
         --namespace openclaw \
-        --from-literal=OPENROUTER_API_KEY="${OPENROUTER_API_KEY}" \
-        --from-literal=SLACK_BOT_TOKEN="${SLACK_BOT_TOKEN}" \
-        --from-literal=SLACK_APP_TOKEN="${SLACK_APP_TOKEN}" \
+        --from-literal=OPENROUTER_API_KEY="${DOPECLAW_OPENROUTER_API_KEY}" \
+        --from-literal=SLACK_BOT_TOKEN="${DOPECLAW_SLACK_BOT_TOKEN}" \
+        --from-literal=SLACK_APP_TOKEN="${DOPECLAW_SLACK_APP_TOKEN}" \
         --dry-run=client -o yaml | kubectl apply -f -
     echo "Created openclaw-secrets secret"
 
