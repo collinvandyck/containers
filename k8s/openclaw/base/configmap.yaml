@@ -3,20 +3,39 @@ kind: ConfigMap
 metadata:
   name: openclaw-config
 data:
-  config.yaml: |
-    llm:
-      provider: openrouter
-      model: anthropic/claude-sonnet-4
-
-    channels:
-      slack:
-        enabled: true
-        mode: socket
-        requireMention: true
-        mentionPatterns:
-          - "dopeclaw"
-
-    agents:
-      defaults:
-        sandbox:
-          workspaceAccess: rw
+  openclaw.json: |
+    {
+      "gateway": {
+        "port": 18789
+      },
+      "agents": {
+        "defaults": {
+          "workspace": "/home/node/.openclaw/workspace",
+          "model": {
+            "primary": "openrouter/anthropic/claude-3.5-haiku"
+          },
+          "sandbox": {
+            "workspaceAccess": "rw"
+          }
+        },
+        "list": [
+          {
+            "id": "main",
+            "default": true,
+            "identity": {
+              "name": "dopeclaw",
+              "emoji": "🐾"
+            }
+          }
+        ]
+      },
+      "channels": {
+        "slack": {
+          "enabled": true,
+          "mode": "socket",
+          "requireMention": true,
+          "groupPolicy": "open",
+          "replyToMode": "all"
+        }
+      }
+    }
