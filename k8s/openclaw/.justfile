@@ -27,13 +27,13 @@ create-secrets:
         --dry-run=client -o yaml | kubectl apply -f -
     echo "Created openclaw-secrets secret"
 
-# Deploy openclaw (default: production)
-deploy env='production':
-    kubectl apply -k overlays/{{env}}
+# Deploy openclaw
+deploy:
+    kubectl apply -k base/
 
 # Delete openclaw deployment (keeps namespace and secrets)
-delete env='production':
-    kubectl delete -k overlays/{{env}} --ignore-not-found=true
+delete:
+    kubectl delete -k base/ --ignore-not-found=true
 
 # Get openclaw pod status
 status:
@@ -68,4 +68,4 @@ list-secrets:
     kubectl get secrets -n openclaw
 
 # Full deployment: create secrets and apply manifests
-full-deploy env='production': create-secrets (deploy env)
+full-deploy: create-secrets deploy
