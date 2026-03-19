@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: openclaw
+  labels:
+    app: openclaw
+spec:
+  selector:
+    matchLabels:
+      app: openclaw
+  endpoints:
+    - port: gateway
+      interval: 30s
+      path: /metrics
