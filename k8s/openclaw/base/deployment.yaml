@@ -78,6 +78,10 @@ spec:
                 log "Fresh install - writing initial config"
                 cp /config/openclaw.json /home/node/.openclaw/openclaw.json
               fi
+              # Seed SOUL.md into workspace (always overwrite from ConfigMap)
+              mkdir -p /home/node/.openclaw/workspace
+              cp /config/SOUL.md /home/node/.openclaw/workspace/SOUL.md
+              log "SOUL.md seeded into workspace"
               log "Config initialization complete"
           volumeMounts:
             - name: data
@@ -115,10 +119,6 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /home/node/.openclaw
-            - name: system-prompt
-              mountPath: /etc/openclaw/system-prompt.txt
-              subPath: system-prompt.txt
-              readOnly: true
           resources:
             requests:
               memory: "1Gi"
@@ -138,6 +138,3 @@ spec:
         - name: config
           configMap:
             name: openclaw-config
-        - name: system-prompt
-          configMap:
-            name: openclaw-system-prompt

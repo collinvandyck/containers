@@ -55,12 +55,9 @@ get-all:
 describe:
     kubectl describe deployment/openclaw -n openclaw
 
-# Update the system prompt and restart (for personality tweaking)
-update-prompt:
-    kubectl create configmap openclaw-system-prompt \
-        --from-file=system-prompt.txt=base/system-prompt.txt \
-        --namespace openclaw \
-        --dry-run=client -o yaml | kubectl apply -f -
+# Update config (including SOUL.md personality) and restart
+update-config:
+    kubectl apply -k base/
     kubectl rollout restart deployment/openclaw -n openclaw
 
 # List secrets in openclaw namespace
