@@ -1,0 +1,29 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: temporal-ca
+  namespace: temporal
+spec:
+  isCA: true
+  commonName: temporal-ca
+  subject:
+    organizations:
+      - temporal-ca
+  duration: 87600h   # 10 years
+  renewBefore: 720h  # 30 days
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  secretName: temporal-ca-key-pair
+  issuerRef:
+    name: selfsigned
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: temporal-ca
+  namespace: temporal
+spec:
+  ca:
+    secretName: temporal-ca-key-pair

@@ -1,0 +1,18 @@
+# TCP passthrough so that Temporal frontend terminates mTLS itself, preserving
+# client cert identity for any future claim-mapper / namespace-authz wiring.
+# Clients connect to temporal.5xx.engineer:443 (SNI-routed, not :7233).
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: temporal-frontend
+  namespace: temporal
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: HostSNI(`temporal.5xx.engineer`)
+      services:
+        - name: temporal-frontend
+          port: 7233
+  tls:
+    passthrough: true

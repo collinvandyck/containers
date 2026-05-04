@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  namespace: temporal
+  labels:
+    app: oauth2-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oauth2-proxy
+  template:
+    metadata:
+      labels:
+        app: oauth2-proxy
+    spec:
+      containers:
+      - name: oauth2-proxy
+        image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.2
+        args:
+        - --provider=google
+        - --upstream=http://temporal-web:8080/
+        - --http-address=0.0.0.0:4180
+        - --redirect-url=https://temporal-ui.5xx.engineer/oauth2/callback
+        - --cookie-secure=true
+        - --cookie-name=_oauth2_proxy_temporal
+        - --cookie-expire=24h
+        - --email-domain=*
+        - --authenticated-emails-file=/etc/oauth2-proxy/authenticated-emails
+        - --reverse-proxy=true
+        - --whitelist-domain=temporal-ui.5xx.engineer
+        - --skip-provider-button=true
+        - --pass-access-token=false
+        - --set-xauthrequest=true
+        ports:
+        - containerPort: 4180
+          name: http
+        env:
+        - name: OAUTH2_PROXY_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-proxy-secrets
+              key: client-id
+        - name: OAUTH2_PROXY_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-proxy-secrets
+              key: client-secret
+        - name: OAUTH2_PROXY_COOKIE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-proxy-secrets
+              key: cookie-secret
+        volumeMounts:
+        - name: emails
+          mountPath: /etc/oauth2-proxy
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 2
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+      volumes:
+      - name: emails
+        configMap:
+          name: oauth2-proxy-emails

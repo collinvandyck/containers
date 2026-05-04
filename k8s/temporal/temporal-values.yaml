@@ -1,0 +1,137 @@
+# Helm values for the upstream temporalio/temporal chart.
+# Postgres backend in-cluster, mTLS-protected gRPC frontend.
+# The Web UI is deployed but its ingress is wired up separately under ui/
+# so we can put oauth2-proxy in front of it.
+
+server:
+  replicaCount: 1
+
+  # Frontend's gRPC port requires mTLS, so the kubelet's gRPC readiness probe
+  # can't authenticate. Fall back to a TCP-socket probe. The chart's default
+  # readinessProbe is gRPC, so we null it explicitly to prevent helm's deep
+  # merge from leaving both handlers in place (which fails kube validation).
+  frontend:
+    readinessProbe:
+      grpc: ~
+      tcpSocket:
+        port: rpc
+      initialDelaySeconds: 30
+      periodSeconds: 10
+
+  # Plaintext in-cluster frontend on :7236 used by the system worker and any
+  # cluster-local clients that don't want to deal with mTLS. The chart drops
+  # publicClient.hostPort when this is enabled so internal traffic auto-routes
+  # here instead of the mTLS-protected frontend.
+  internal-frontend:
+    enabled: true
+
+  config:
+    logLevel: info
+
+    tls:
+      frontend:
+        server:
+          certFile: /etc/temporal/tls/frontend/tls.crt
+          keyFile: /etc/temporal/tls/frontend/tls.key
+          requireClientAuth: true
+          clientCaFiles:
+            - /etc/temporal/tls/frontend/ca.crt
+        client:
+          serverName: temporal-frontend
+          rootCaFiles:
+            - /etc/temporal/tls/frontend/ca.crt
+
+    persistence:
+      defaultStore: default
+      visibilityStore: visibility
+      # Immutable after initial deployment.
+      numHistoryShards: 512
+      datastores:
+        default:
+          sql:
+            pluginName: postgres12
+            connectAddr: postgres.temporal.svc.cluster.local:5432
+            connectProtocol: tcp
+            databaseName: temporal
+            user: temporal
+            existingSecret: temporal-postgres-secrets
+            secretKey: POSTGRES_PASSWORD
+            createDatabase: true
+            manageSchema: true
+            maxConns: 20
+            maxIdleConns: 20
+            maxConnLifetime: "1h"
+        visibility:
+          sql:
+            pluginName: postgres12
+            connectAddr: postgres.temporal.svc.cluster.local:5432
+            connectProtocol: tcp
+            databaseName: temporal_visibility
+            user: temporal
+            existingSecret: temporal-postgres-secrets
+            secretKey: POSTGRES_PASSWORD
+            createDatabase: true
+            manageSchema: true
+            maxConns: 10
+            maxIdleConns: 10
+            maxConnLifetime: "1h"
+
+    namespaces:
+      create: true
+      namespace:
+        - name: default
+          retention: 3d
+
+  additionalVolumes:
+    - name: frontend-tls
+      secret:
+        secretName: temporal-frontend-tls
+  additionalVolumeMounts:
+    - name: frontend-tls
+      mountPath: /etc/temporal/tls/frontend
+      readOnly: true
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+web:
+  enabled: true
+  # Ingress is configured separately under ui/ with oauth2-proxy.
+  ingress:
+    enabled: false
+  additionalEnv:
+    - name: TEMPORAL_TLS_CA
+      value: /etc/temporal/tls/client/ca.crt
+    - name: TEMPORAL_TLS_CERT
+      value: /etc/temporal/tls/client/tls.crt
+    - name: TEMPORAL_TLS_KEY
+      value: /etc/temporal/tls/client/tls.key
+    - name: TEMPORAL_TLS_SERVER_NAME
+      value: temporal-frontend.temporal.svc.cluster.local
+  additionalVolumes:
+    - name: ui-client-tls
+      secret:
+        secretName: client-ui-tls
+  additionalVolumeMounts:
+    - name: ui-client-tls
+      mountPath: /etc/temporal/tls/client
+      readOnly: true
+
+# Admin tools pod is useful for running tctl/temporal CLI inside the cluster
+# without going through the mTLS frontend. Kept enabled.
+admintools:
+  enabled: true
+
+# Schema setup runs as a pre-install/pre-upgrade Helm hook job.
+schema:
+  useHelmHooks: true
+
+# Default chart shims target Temporal 1.30+ images.
+shims:
+  dockerize: false
+  elasticsearchTool: false

@@ -1,0 +1,23 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: client-ui
+  namespace: temporal
+spec:
+  secretName: client-ui-tls
+  duration: 8760h    # 1 year
+  renewBefore: 720h  # 30 days
+  commonName: ui
+  subject:
+    organizations:
+      - temporal-clients
+  usages:
+    - client auth
+    - digital signature
+    - key encipherment
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: temporal-ca
+    kind: Issuer

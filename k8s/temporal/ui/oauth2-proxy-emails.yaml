@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oauth2-proxy-emails
+  namespace: temporal
+data:
+  # One email per line. oauth2-proxy reloads this when the file changes.
+  authenticated-emails: |
+    collinvandyck@gmail.com

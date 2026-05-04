@@ -1,0 +1,32 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: temporal-frontend-tls
+  namespace: temporal
+spec:
+  secretName: temporal-frontend-tls
+  duration: 8760h    # 1 year
+  renewBefore: 720h  # 30 days
+  commonName: temporal-frontend
+  subject:
+    organizations:
+      - temporal
+  dnsNames:
+    - temporal.5xx.engineer
+    - temporal-frontend
+    - temporal-frontend.temporal
+    - temporal-frontend.temporal.svc
+    - temporal-frontend.temporal.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - 127.0.0.1
+  usages:
+    - server auth
+    - digital signature
+    - key encipherment
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: temporal-ca
+    kind: Issuer
